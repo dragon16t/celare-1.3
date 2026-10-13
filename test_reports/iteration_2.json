@@ -1,0 +1,55 @@
+{
+  "summary": "End-to-end verification of Celesta Glow marketplace feature set (location, pricing v2, prepaid consult, admin sidebars/managers, doctor & partner portals, consult room, my bookings). Backend pytest suite: 15/15 passed. Frontend: all required data-testids present and critical flows working on https://celest-replica.preview.emergentagent.com.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Global", "issues": [
+        "Non-blocking React console warnings on homepage/doctors: duplicate list keys ('Encountered two children with the same key'), UNSAFE_componentWillMount in strict mode (from carousel dep), 'fetchpriority' DOM prop casing. No functional impact but should be cleaned up."
+      ]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_celesta_glow_iter2.py",
+    "/app/test_reports/pytest/iter2.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py still ~3900 lines; incremental extraction to /routes continues (mp_core, mp_ops, geo, customer_auth) — recommend finishing modularization.",
+    "React 'duplicate key' warnings persist from previous iteration — product/category lists need unique .map keys.",
+    "AdminDesktopSidebar is intentionally hidden on /admin/dashboard & a few other OWN_SIDEBAR routes; dashboard uses its own nav. If product requirement is 'sidebar on all admin pages', add dashboard to the sidebar as well (currently relies on dashboard-level cards)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_celesta_glow_iter2.py",
+    "/app/test_reports/iteration_2.json"
+  ],
+  "success_rate": {"backend": "100% (15/15)", "frontend": "100% of critical flows verified"},
+  "test_credentials": "Admin: celestaglow2024 (OK). Doctor OTP via /api/mp/auth/send-otp returns dev_otp. Customer OTP via /api/auth/send-otp; code in /var/log/supervisor/backend.err.log (grep 'OTP:'). Sample doctor dr.meera@sample.celestaglow.com, partner partner.test@sample.celestaglow.com, customer t@x.com.",
+  "seed_data_creation": "None added. Used existing seeded doctor/partner/customer and existing paid+completed consult CG-C-C8C38167D602.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "verified_features": {
+    "location_gate_and_modal": "On /doctors without saved location shows location-gate + enable-location-btn + search-location-btn. With cg_delivery_location set, /doctors loads doctor-list with 3 doctor cards (no gate). Header location-strip-change opens location-modal with detect-location-btn, location-search-input, quick-areas all present.",
+    "homepage_gold_badges": "gold-badge-doctor and gold-badge-service rendered on homepage.",
+    "three_col_grids": "service-list gridTemplateColumns='397 397 397' (3 cols), doctor-list '355 355 355' (3 cols) at 1920 viewport. 9 service-card + 9 discount-badge + 9 price-tag; 3 doctor-card + 3 price-tag + 3 discount-badge.",
+    "service_detail": "service-price-box + pro-picker present. document.body does NOT contain 'platform fee' text (case-insensitive). Bridal Glow Package visible in /api/mp/services (approved live).",
+    "doctor_profile": "price-tag + discount-badge render. No 'Platform fee' text.",
+    "prepaid_only_consult": "POST /api/mp/consultations/instant -> 503 'Instant consultations need online payment, which is being set up' when Razorpay not configured. ",
+    "admin_sidebar_and_managers": "/admin/dermatologists, /admin/partners, /admin/media-tools all show admin-desktop-sidebar with featured sidebar-dermatologists and sidebar-partners. /admin/dashboard shows nav-dermatologist-manager and nav-partner-manager cards (dashboard uses its own sidebar by design).",
+    "admin_guard": "Unauthenticated navigation to /admin/partners lands on /admin with password input visible.",
+    "derm_manager": "3 crm-contact-<id> rows with mobile+email. Settings tab shows pricing-settings with input-platform_commission_pct, input-customer_fee_pct, input-display_markup_pct, save-pricing button, pricing-preview.",
+    "partner_hub": "phub-custom tab present (Awaiting review / Live / Rejected / All filters).",
+    "pricing_math_customer_visible": "Doctor fee for Dr. Meera: base 799 -> customer 919, mrp 1195, discount 23% -- matches review spec. my/bookings shows '₹919' for CG-C-C8C38167D602.",
+    "doctor_portal": "After OTP login (dev_otp works), Wallet tab reveals wallet-balance + wallet-info-btn; clicking info toggles wallet-breakdown.",
+    "partner_portal": "Services tab shows my-svc-price-* editable inputs for owned services (2 approved: Classic Clean-Up, Bridal Glow Package) with 'You earn ₹X after 15% Celesta commission' hint. toggle-custom-form present; +New service reveals custom-name/custom-price/custom-image/custom-submit.",
+    "consult_room": "/consult-room/CG-C-C8C38167D602 as doctor renders Jitsi-ready join-call ('Start call') for completed/paid consult. 'Email completion code to customer' + 'Verify & complete' flow visible.",
+    "my_bookings": "Customer login via /api/auth/send-otp + verify-otp yields token stored in cg_auth_token. /my/bookings renders consult-<id> and consult-summary-<id> rows; completed consult shows '₹919 • CG-C-C8C38167D602 • completed'.",
+    "geo_osm_fallback": "GET /api/geo/reverse-geocode?lat=12.97&lng=77.59 returns 200 with city/locality (OSM fallback works when Google key absent).",
+    "backend_price_view_no_commission_leak": "/api/mp/services and /api/mp/doctors expose price/fee + mrp + discount_pct; no 'commission' or 'price_range' keys in public response."
+  },
+  "context_for_next_testing_agent": "All review-request flows are verified. Backend regression test lives at /app/backend/tests/test_celesta_glow_iter2.py (uses REACT_APP_BACKEND_URL). Remember: Razorpay/SMTP/Zoom are intentionally unconfigured — endpoints return 503 and OTPs land in backend.err.log. For customer OTP login UI storage key is 'cg_auth_token'; for doctor it's 'mp_doctor_token'; for partner 'mp_partner_token'; admin uses sessionStorage/localStorage 'adminToken'. React console still emits legacy warnings (duplicate keys, UNSAFE_componentWillMount, fetchpriority) that main agent should clean up in a future pass but they're non-blocking."
+}

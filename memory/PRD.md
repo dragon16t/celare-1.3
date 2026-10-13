@@ -73,3 +73,12 @@
 ## Next Tasks
 - Collect integration keys from user as needed
 - Verify checkout flow end-to-end once Razorpay configured
+
+## Marketplace Upgrade v2 (2026-10-13)
+- Shared saved location (cg_delivery_location) used by header, /doctors and service booking — never re-asked; OSM geocoding fallback when no Google key; redesigned interactive location modal + LocationGate
+- Pricing v2 (admin-editable universal %): provider commission 15%, customer markup 15% (baked in, no fee line), display MRP +30% with discount badges; ledger meta breakdown on every settlement; wallet info breakdown
+- Prepaid-only consultations: doctor portal shows paid bookings only; admin "Confirm payment received"; on confirm → doctor email + Zoom meeting (if ZOOM_* env keys set, else Jitsi); Call doctor / End call; consult summary + prescription download in My Bookings
+- Partners: own prices (no ranges), custom services with photo → admin approval tab "Partner-created Services"; customer can choose a professional
+- Admin: desktop sidebar on all admin pages with featured Dermatologist/Partner Manager buttons; fee/price overrides; contacts in CRM rows; platform earnings in both hubs
+- 3-per-row doctor/service cards, gold badges/bars, copy trimmed; top banner multi-slide + swipe
+- Pending keys: Razorpay (payments), ZOOM_ACCOUNT_ID/ZOOM_S2S_CLIENT_ID/ZOOM_S2S_CLIENT_SECRET, SMTP

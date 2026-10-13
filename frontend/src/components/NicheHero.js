@@ -42,7 +42,7 @@ export default function NicheHero({
             never awkwardly cut/squished on small screens. */}
         <picture>
           <source media="(min-width: 640px)" srcSet={cldOptim(bgImage, { w: 1600 })} />
-          <img src={cldOptim(mobileImg, { w: 1200 })} alt="" loading="eager" fetchpriority="high" decoding="async" aria-hidden className="relative block sm:absolute sm:inset-0 w-full h-auto sm:h-full object-contain sm:object-cover object-center sm:object-right" />
+          <img src={cldOptim(mobileImg, { w: 1200 })} alt="" loading="eager" fetchPriority="high" decoding="async" aria-hidden className="relative block sm:absolute sm:inset-0 w-full h-auto sm:h-full object-contain sm:object-cover object-center sm:object-right" />
         </picture>
 
         {/* Left-fading legibility overlay */}
