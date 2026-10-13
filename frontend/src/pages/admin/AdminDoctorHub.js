@@ -6,12 +6,15 @@ import AdminSupport from './AdminSupport';
 import MpCategories from '../../components/admin/MpCategories';
 import MpSettings from '../../components/admin/MpSettings';
 import MpReviews from '../../components/admin/MpReviews';
+import { PlatformWallet } from './AdminPartnerHub';
+import { IndianRupee } from 'lucide-react';
 
 const tabs = [
   ['doctors', 'Doctors & Applications', Users],
   ['bookings', 'Consultation Bookings', CalendarDays],
   ['categories', 'Categories & Images', LayoutGrid],
   ['reviews', 'Reviews', Star],
+  ['earnings', 'Platform Earnings', IndianRupee],
   ['support', 'Support Tickets', LifeBuoy],
   ['settings', 'Settings', Settings],
 ];
@@ -21,7 +24,7 @@ const AdminDoctorHub = () => {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto" data-testid="admin-doctor-hub">
       <h1 className="text-2xl font-extrabold text-stone-900">Dermatologist Manager</h1>
-      <p className="text-sm text-stone-500">Everything for the consultation module — applications, bookings, categories, reviews, support and settings.</p>
+      <p className="text-sm text-stone-500">Doctors, prepaid consultations, earnings and pricing.</p>
       <div className="flex gap-2 overflow-x-auto pb-2 mt-5 mb-6" data-testid="doctor-hub-tabs">
         {tabs.map(([k, label, Icon]) => (
           <button key={k} onClick={() => setTab(k)} data-testid={`dhub-${k}`}
@@ -34,6 +37,7 @@ const AdminDoctorHub = () => {
       {tab === 'bookings' && <AdminMpBookings fixedModule="consultation" />}
       {tab === 'categories' && <MpCategories module="doctor" />}
       {tab === 'reviews' && <MpReviews module="consultation" />}
+      {tab === 'earnings' && <PlatformWallet />}
       {tab === 'support' && <AdminSupport userType="doctor" />}
       {tab === 'settings' && <MpSettings module="doctor" />}
     </div>

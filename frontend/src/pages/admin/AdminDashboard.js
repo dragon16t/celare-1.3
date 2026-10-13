@@ -240,6 +240,12 @@ function AdminDashboard() {
           <Link to="/admin/dashboard" className="flex items-center gap-3 px-4 py-3 text-green-600 bg-green-50 rounded-xl font-medium" data-testid="nav-dashboard">
             <LayoutDashboard size={20} /> Dashboard
           </Link>
+          <Link to="/admin/dermatologists" className="flex items-center gap-3 px-4 py-3 text-emerald-700 bg-emerald-50/70 ring-1 ring-emerald-200 rounded-xl font-bold" data-testid="nav-dermatologist-manager">
+            <Stethoscope size={20} /> Dermatologist Manager
+          </Link>
+          <Link to="/admin/partners" className="flex items-center gap-3 px-4 py-3 text-cyan-700 bg-cyan-50/70 ring-1 ring-cyan-200 rounded-xl font-bold" data-testid="nav-partner-manager">
+            <Users size={20} /> Service Partner Manager
+          </Link>
           <Link to="/admin/blogs" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl" data-testid="nav-blogs">
             <FileText size={20} /> Blog Posts
           </Link>

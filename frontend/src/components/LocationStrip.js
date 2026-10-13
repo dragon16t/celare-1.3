@@ -1,28 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { MapPin, ChevronDown, Loader2, Search, X, Navigation as NavIcon, Truck, Star, Sparkles, Quote } from 'lucide-react';
+import { MapPin, ChevronDown, Loader2, Search, X, Navigation as NavIcon, Truck, Star, Sparkles, Quote, CheckCircle2, Clock, Stethoscope } from 'lucide-react';
+import { getSavedLocation, saveLocation, detectLocation, LOCATION_EVENT } from '../utils/userLocation';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const STORAGE_KEY = 'cg_delivery_location';
 const PROMPTED_KEY = 'cg_delivery_prompted_v1';
 
-function loadStored() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (_) { return null; }
-}
-function save(loc) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(loc)); } catch (_) { /* noop */ }
-}
-
-async function reverseGeocode(lat, lng) {
-  // Backend proxies Google — bypasses CORS + keeps key server-side.
-  try {
-    const r = await axios.get(`${API}/geo/reverse-geocode`, { params: { lat, lng } });
-    return r.data;
-  } catch (_) { return null; }
-}
+const loadStored = getSavedLocation;
+const save = saveLocation;
 
 /**
  * LocationStrip — sits directly below the fixed header, matching the reference
@@ -37,9 +23,11 @@ export default function LocationStrip() {
 
   // Cross-component sync — if location updated elsewhere, re-hydrate.
   useEffect(() => {
-    const onStorage = (e) => { if (e.key === STORAGE_KEY) setLoc(loadStored()); };
+    const onStorage = (e) => { if (!e.key || e.key === STORAGE_KEY) setLoc(loadStored()); };
+    const onLocal = () => setLoc(loadStored());
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener(LOCATION_EVENT, onLocal);
+    return () => { window.removeEventListener('storage', onStorage); window.removeEventListener(LOCATION_EVENT, onLocal); };
   }, []);
 
   // Auto-prompt: on the first scroll ever (per browser), if no location + not
@@ -59,15 +47,10 @@ export default function LocationStrip() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [loc]);
 
-  const detect = async () => new Promise((resolve) => {
-    if (!navigator.geolocation) { alert('Location not supported on this browser'); return resolve(false); }
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const info = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-      if (info) { save(info); setLoc(info); setOpen(false); resolve(true); }
-      else { alert('Could not identify your location. Please search manually.'); resolve(false); }
-    }, () => { alert('Please allow location permission'); resolve(false); },
-    { enableHighAccuracy: true, timeout: 12000 });
-  });
+  const detect = async () => {
+    try { const info = await detectLocation(); setLoc(info); setTimeout(() => setOpen(false), 700); return true; }
+    catch (_) { return false; }
+  };
 
   const primary = loc ? (loc.locality || loc.city || 'Set location') : 'Select delivery location';
   const secondary = loc ? [loc.district && loc.district !== loc.locality ? loc.district : null, loc.city && loc.city !== loc.locality ? loc.city : null].filter(Boolean).join(', ') : '';
@@ -210,14 +193,16 @@ function AdCarousel() {
   );
 }
 
+const QUICK_AREAS = ['Bengaluru', 'Mumbai', 'Delhi', 'Hyderabad', 'Chennai', 'Kochi'];
+
 function LocationModal({ onClose, onDetect, onSelect }) {
   const [q, setQ] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [gps, setGps] = useState('idle');
 
-  // Debounced Places Autocomplete via our backend proxy (no CORS pain).
   useEffect(() => {
-    if (!q || q.length < 3) { setPredictions([]); return; }
+    if (!q || q.length < 3) { setPredictions([]); return undefined; }
     setBusy(true);
     const t = setTimeout(async () => {
       try {
@@ -234,55 +219,72 @@ function LocationModal({ onClose, onDetect, onSelect }) {
     try {
       const r = await axios.get(`${API}/geo/place-details`, { params: { place_id: p.place_id } });
       if (r.data && r.data.lat) onSelect(r.data);
-      else alert('Could not resolve that address');
-    } catch (_) { alert('Could not resolve address'); }
+    } catch (_) { /* keep modal open */ }
     finally { setBusy(false); }
   };
 
+  const useGps = async () => {
+    setGps('busy');
+    setGps((await onDetect()) ? 'done' : 'denied');
+  };
+
   return (
-    <div className="fixed inset-0 z-[60] bg-black/50 flex items-start justify-center p-4 sm:p-8" onClick={onClose}>
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="location-modal">
-        <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-5 py-4 flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold flex items-center gap-2"><MapPin size={16} /> Choose delivery location</h3>
-            <p className="text-emerald-100 text-xs mt-0.5">Fast delivery available in select areas</p>
+    <div className="fixed inset-0 z-[60] bg-stone-950/60 backdrop-blur-sm flex items-end sm:items-start justify-center sm:p-8" onClick={onClose}>
+      <div className="w-full max-w-md bg-white rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-[slideUp_.35s_ease-out]" onClick={(e) => e.stopPropagation()} data-testid="location-modal">
+        <div className="relative bg-emerald-800 text-white px-6 pt-6 pb-8 overflow-hidden">
+          <span className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-emerald-600/40" />
+          <span className="absolute right-10 -bottom-12 w-28 h-28 rounded-full bg-amber-300/20" />
+          <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20" data-testid="location-modal-close"><X size={16} /></button>
+          <p className="text-[10px] font-black tracking-[0.3em] uppercase text-amber-300">One tap. Everything near you.</p>
+          <h3 className="relative text-2xl font-extrabold mt-1">Where should we glow?</h3>
+          <div className="relative flex gap-3 mt-4 text-[11px] text-emerald-100">
+            <span className="flex items-center gap-1"><Truck size={12} /> 30–45 min delivery</span>
+            <span className="flex items-center gap-1"><Stethoscope size={12} /> Doctors nearby</span>
           </div>
-          <button onClick={onClose} className="p-1 -mr-1 rounded-full hover:bg-white/10" data-testid="location-modal-close"><X size={18} /></button>
         </div>
-        <div className="p-5 space-y-3">
-          <button
-            onClick={onDetect}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl font-semibold text-sm border border-emerald-200"
-            data-testid="detect-location-btn"
-          >
-            <NavIcon size={15} /> Use my current location
+        <div className="p-5 -mt-4 bg-white rounded-t-3xl relative space-y-3">
+          <button onClick={useGps} disabled={gps === 'busy'}
+            className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-colors ${gps === 'done' ? 'border-emerald-500 bg-emerald-50' : 'border-emerald-100 hover:border-emerald-400 bg-white'}`}
+            data-testid="detect-location-btn">
+            <span className="relative w-11 h-11 rounded-full bg-emerald-700 text-white flex items-center justify-center shrink-0">
+              {gps === 'busy' ? <Loader2 size={18} className="animate-spin" /> : gps === 'done' ? <CheckCircle2 size={18} /> : <NavIcon size={18} />}
+              {gps === 'idle' && <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-ping" />}
+            </span>
+            <span>
+              <span className="block text-sm font-extrabold text-stone-900">{gps === 'done' ? 'Location saved' : gps === 'busy' ? 'Locating you…' : 'Use my current location'}</span>
+              <span className="block text-[11px] text-stone-500">{gps === 'denied' ? 'Permission blocked — search your area below' : 'Most accurate • saved for every page'}</span>
+            </span>
           </button>
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search area, locality, landmark or pincode"
-              className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-              data-testid="location-search-input"
-            />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search area, landmark or pincode"
+              className="w-full pl-10 pr-3 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+              data-testid="location-search-input" />
           </div>
-          {busy && <div className="text-center text-gray-400"><Loader2 size={16} className="animate-spin inline" /></div>}
+          {!q && (
+            <div className="flex flex-wrap gap-1.5" data-testid="quick-areas">
+              {QUICK_AREAS.map((c) => (
+                <button key={c} onClick={() => setQ(c)} className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-full px-3 py-1.5 transition-colors">{c}</button>
+              ))}
+            </div>
+          )}
+          {busy && <div className="text-center text-stone-400"><Loader2 size={16} className="animate-spin inline" /></div>}
           {predictions.length > 0 && (
-            <div className="max-h-64 overflow-y-auto space-y-1 border border-gray-100 rounded-xl p-1">
+            <div className="max-h-60 overflow-y-auto space-y-1 border border-stone-100 rounded-2xl p-1" data-testid="location-predictions">
               {predictions.map((p) => (
-                <button key={p.place_id} onClick={() => pick(p)} className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-emerald-50 text-sm">
-                  <div className="font-medium text-gray-900 text-sm">{p.main_text || p.description}</div>
-                  <div className="text-xs text-gray-500">{p.secondary_text}</div>
+                <button key={p.place_id} onClick={() => pick(p)} className="w-full flex gap-2.5 text-left px-3 py-2.5 rounded-xl hover:bg-emerald-50 text-sm">
+                  <MapPin size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+                  <span><span className="block font-semibold text-stone-900 text-sm">{p.main_text || p.description}</span>
+                  <span className="block text-xs text-stone-500">{p.secondary_text}</span></span>
                 </button>
               ))}
             </div>
           )}
-          {/* Ad carousel — keeps the user engaged while they choose location */}
           <AdCarousel />
-
+          <p className="text-[10px] text-stone-400 text-center flex items-center justify-center gap-1"><Clock size={10} /> We remember this — change it anytime from the top bar.</p>
         </div>
       </div>
+      <style>{`@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }`}</style>
     </div>
   );
 }

@@ -66,7 +66,7 @@ const AdminMpBookings = ({ fixedModule }) => {
                 <td className="p-3"><span className={`rounded-full px-2 py-0.5 font-bold ${statusColor(b.status)}`}>{fmtStatus(b.status)}</span></td>
                 <td className="p-3">
                   <div className="flex gap-1.5 flex-wrap">
-                    {b.payment_status !== 'paid' && b.status !== 'cancelled' && <button onClick={() => act(b.booking_id, 'mark_paid')} data-testid={`paid-${b.booking_id}`} className="bg-emerald-700 text-white font-bold rounded-full px-2.5 py-1">Mark paid</button>}
+                    {b.payment_status !== 'paid' && b.status !== 'cancelled' && <button onClick={() => act(b.booking_id, 'mark_paid')} data-testid={`paid-${b.booking_id}`} className="bg-emerald-700 text-white font-bold rounded-full px-2.5 py-1">Confirm payment received</button>}
                     {b.status === 'pending_assignment' && module === 'home' && <button onClick={() => act(b.booking_id, 'rebroadcast')} className="border border-stone-300 font-bold rounded-full px-2.5 py-1">Re-broadcast</button>}
                     {!['cancelled', 'completed'].includes(b.status) && <button onClick={() => act(b.booking_id, 'cancel')} className="border border-rose-400 text-rose-700 font-bold rounded-full px-2.5 py-1">Cancel</button>}
                   </div>

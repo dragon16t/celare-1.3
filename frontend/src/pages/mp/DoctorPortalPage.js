@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { mp, doctorHdr, WEEK_DAYS, statusColor, fmtStatus } from '../../utils/mpApi';
 import PresenceToggle from '../../components/mp/PresenceToggle';
 import DoctorInstantRequests from '../../components/mp/DoctorInstantRequests';
+import WalletPanel from '../../components/mp/WalletPanel';
+import EarningHint from '../../components/mp/EarningHint';
 
 const input = 'w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm';
 const tabBtn = (active) => `px-4 py-2.5 rounded-full text-xs font-extrabold whitespace-nowrap ${active ? 'bg-emerald-700 text-white' : 'bg-white border border-stone-200 text-stone-600'}`;
@@ -53,6 +55,7 @@ const DoctorPortalPage = () => {
   const [notifs, setNotifs] = useState([]);
   const [otpMap, setOtpMap] = useState({});
   const [rxDraft, setRxDraft] = useState({});
+  const [feeDraft, setFeeDraft] = useState('');
 
   const loadAll = () => {
     mp.get('/doctor/bookings', doctorHdr()).then((r) => setBookings(r.data)).catch(() => {});
@@ -131,19 +134,19 @@ const DoctorPortalPage = () => {
 
         {tab === 'bookings' && (
           <div className="space-y-3" data-testid="doctor-bookings">
-            {bookings.length === 0 && <p className="text-sm text-stone-400 text-center py-10">No bookings yet.</p>}
+            {bookings.length === 0 && <p className="text-sm text-stone-400 text-center py-10">No paid consultations yet — go online to get instant requests.</p>}
             {bookings.map((b) => (
               <div key={b.booking_id} className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-bold text-stone-900">{b.customer?.name}</p>
-                    <p className="text-xs text-stone-500">{b.booking_id} • {b.date} • {b.slot} • ₹{b.fee}</p>
+                    <p className="text-xs text-stone-500">{b.booking_id} • {b.date} • {b.slot} • Paid · you earn ₹{b.provider_earning ?? b.fee}</p>
                   </div>
                   <span className={`text-[11px] font-bold rounded-full px-2.5 py-1 ${statusColor(b.status)}`}>{fmtStatus(b.status)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {b.status === 'confirmed' && (
-                    <Link to={`/consult-room/${b.booking_id}`} data-testid={`open-room-${b.booking_id}`} className="bg-emerald-700 text-white text-xs font-bold rounded-full px-4 py-2">Open video room</Link>
+                  {['confirmed', 'in_progress'].includes(b.status) && (
+                    <Link to={`/consult-room/${b.booking_id}`} data-testid={`open-room-${b.booking_id}`} className="bg-emerald-700 text-white text-xs font-bold rounded-full px-4 py-2">Start call</Link>
                   )}
                   {['confirmed', 'in_progress'].includes(b.status) && (
                     <button onClick={() => act(b.booking_id, 'request-completion')} data-testid={`req-complete-${b.booking_id}`} className="border border-stone-300 text-xs font-bold rounded-full px-4 py-2">Request completion</button>
@@ -218,9 +221,11 @@ const DoctorPortalPage = () => {
         {tab === 'availability' && (
           <div className="bg-white rounded-3xl border border-stone-200 p-6 space-y-4" data-testid="availability-tab">
             <div className="grid sm:grid-cols-2 gap-4">
-              <label className="text-xs font-bold text-stone-600 uppercase">Fee (₹)
+              <label className="text-xs font-bold text-stone-600 uppercase">Your fee (₹)
                 <input type="number" className={`${input} mt-1`} defaultValue={profile.consultation?.fee}
-                  onBlur={(e) => saveProfile({ fee: Number(e.target.value) })} data-testid="fee-input" /></label>
+                  onChange={(e) => setFeeDraft(e.target.value)}
+                  onBlur={(e) => Number(e.target.value) > 0 && saveProfile({ fee: Number(e.target.value) })} data-testid="fee-input" />
+                <EarningHint price={feeDraft || profile.consultation?.fee} /></label>
               <label className="text-xs font-bold text-stone-600 uppercase">Duration (min)
                 <input type="number" className={`${input} mt-1`} defaultValue={profile.consultation?.duration_min}
                   onBlur={(e) => saveProfile({ duration_min: Number(e.target.value) })} /></label>
@@ -243,35 +248,7 @@ const DoctorPortalPage = () => {
           </div>
         )}
 
-        {tab === 'wallet' && wallet && (
-          <div className="space-y-4" data-testid="doctor-wallet">
-            <div className="bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-3xl p-6">
-              <p className="text-xs uppercase tracking-widest opacity-80">Available balance</p>
-              <p className="text-4xl font-extrabold mt-1">₹{wallet.balance.toFixed(2)}</p>
-              <button onClick={withdraw} data-testid="doctor-withdraw" className="mt-4 bg-white text-emerald-900 text-xs font-extrabold rounded-full px-5 py-2.5">Request withdrawal</button>
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 p-4">
-              <p className="font-bold text-stone-800 text-sm mb-2">Ledger</p>
-              {wallet.ledger.length === 0 && <p className="text-xs text-stone-400">No transactions yet — earnings appear after verified completions.</p>}
-              {wallet.ledger.map((l) => (
-                <div key={l.entry_id} className="flex justify-between text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-600">{l.ref}{l.booking_id ? ` • ${l.booking_id}` : ''}<span className="block text-[10px] text-stone-400">{new Date(l.at).toLocaleString('en-IN')}</span></span>
-                  <span className={`font-extrabold ${l.type === 'credit' ? 'text-emerald-700' : 'text-rose-600'}`}>{l.type === 'credit' ? '+' : '−'}₹{l.amount}</span>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 p-4">
-              <p className="font-bold text-stone-800 text-sm mb-2">Withdrawals</p>
-              {wallet.withdrawals.length === 0 && <p className="text-xs text-stone-400">None yet.</p>}
-              {wallet.withdrawals.map((w) => (
-                <div key={w.withdrawal_id} className="flex justify-between text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-600">{w.withdrawal_id}</span>
-                  <span className="font-bold">₹{w.amount} <span className={`ml-1 ${statusColor(w.status)} rounded-full px-2 py-0.5`}>{w.status}</span></span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {tab === 'wallet' && wallet && <WalletPanel wallet={wallet} onWithdraw={withdraw} testid="doctor-wallet" />}
 
         {tab === 'notifications' && (
           <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-50" data-testid="doctor-notifs">

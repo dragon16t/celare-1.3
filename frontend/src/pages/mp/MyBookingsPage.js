@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Video, FileText, Download } from 'lucide-react';
+import { MapPin, Phone, FileText, Download, Clock } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { mp, customerHdr, statusColor, fmtStatus } from '../../utils/mpApi';
@@ -43,6 +43,53 @@ const CustomerLogin = ({ onLogin }) => {
   );
 };
 
+const openRx = async (rx) => {
+  try {
+    const r = await mp.get(`/prescriptions/${rx.prescription_id}/pdf`, { ...customerHdr(), responseType: 'blob' });
+    const url = URL.createObjectURL(r.data);
+    const a = document.createElement('a');
+    a.href = url; a.download = `prescription-${rx.prescription_id}.pdf`; a.click();
+  } catch { toast.error('Could not download prescription'); }
+};
+
+const ConsultRow = ({ b, rx }) => {
+  const paid = b.payment_status === 'paid';
+  const live = paid && ['confirmed', 'in_progress', 'completion_pending'].includes(b.status);
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5" data-testid={`consult-${b.booking_id}`}>
+      <div className="flex flex-wrap items-center gap-3 justify-between">
+        <div>
+          <p className="font-bold text-stone-900">Dr. {b.doctor_name || 'Assigning…'}</p>
+          <p className="text-xs text-stone-500">{b.date} • {b.slot} • ₹{b.fee} • {b.booking_id}</p>
+          <span className={`inline-block mt-1.5 text-[11px] font-bold rounded-full px-2.5 py-1 ${statusColor(paid ? b.status : 'pending_payment')}`}>{paid ? fmtStatus(b.status) : 'awaiting payment'}</span>
+        </div>
+        {live && (
+          <Link to={`/consult-room/${b.booking_id}`} data-testid={`join-room-${b.booking_id}`}
+            className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-bold rounded-full px-4 py-2.5">
+            <Phone size={14} /> Call doctor
+          </Link>
+        )}
+        {!paid && <span className="text-[11px] text-amber-700 font-bold flex items-center gap-1"><Clock size={12} /> Prepaid — confirms after payment</span>}
+      </div>
+      {b.status === 'completed' && (
+        <div className="mt-3 border-t border-stone-100 pt-3 text-xs" data-testid={`consult-summary-${b.booking_id}`}>
+          {rx ? (
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-extrabold text-stone-800">Doctor's notes</p>
+                <p className="text-stone-600 mt-0.5">{rx.assessment || '—'}</p>
+                {rx.medications?.length > 0 && <p className="text-stone-500 mt-1">Rx: {rx.medications.map((m) => m.name).join(', ')}</p>}
+              </div>
+              <button onClick={() => openRx(rx)} data-testid={`rx-pdf-${rx.prescription_id}`}
+                className="inline-flex items-center gap-1.5 bg-emerald-700 text-white font-bold rounded-full px-4 py-2"><Download size={13} /> Download</button>
+            </div>
+          ) : <p className="text-stone-400">Your prescription will appear here shortly.</p>}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MyBookingsPage = () => {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(false);
@@ -63,19 +110,7 @@ const MyBookingsPage = () => {
           {data.consultations.length === 0 && <p className="text-sm text-stone-400">No consultations yet. <Link to="/doctors" className="text-emerald-700 underline">Find a dermatologist</Link></p>}
           <div className="space-y-3" data-testid="my-consultations">
             {data.consultations.map((b) => (
-              <div key={b.booking_id} className="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 flex flex-wrap items-center gap-3 justify-between">
-                <div>
-                  <p className="font-bold text-stone-900">Dr. {b.doctor_name}</p>
-                  <p className="text-xs text-stone-500">{b.booking_id} • {b.date} • {b.slot} • ₹{b.fee} • {b.payment_status === 'paid' ? 'Paid' : 'Unpaid'}</p>
-                  <span className={`inline-block mt-1.5 text-[11px] font-bold rounded-full px-2.5 py-1 ${statusColor(b.status)}`}>{fmtStatus(b.status)}</span>
-                </div>
-                {['confirmed', 'in_progress', 'completion_pending', 'completed'].includes(b.status) && (
-                  <Link to={`/consult-room/${b.booking_id}`} data-testid={`join-room-${b.booking_id}`}
-                    className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-bold rounded-full px-4 py-2.5">
-                    <Video size={14} /> Join room
-                  </Link>
-                )}
-              </div>
+              <ConsultRow key={b.booking_id} b={b} rx={data.prescriptions.find((r) => r.booking_id === b.booking_id)} />
             ))}
           </div>
         </section>
@@ -111,15 +146,8 @@ const MyBookingsPage = () => {
                   <p className="text-xs text-stone-500">{rx.prescription_id} • {rx.date}</p>
                 </div>
                 <a href={`${BASE}/api/mp/prescriptions/${rx.prescription_id}/pdf`} target="_blank" rel="noreferrer"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      const r = await mp.get(`/prescriptions/${rx.prescription_id}/pdf`, { ...customerHdr(), responseType: 'blob' });
-                      const url = URL.createObjectURL(r.data);
-                      window.open(url, '_blank');
-                    } catch { toast.error('Could not open prescription'); }
-                  }}
-                  data-testid={`rx-pdf-${rx.prescription_id}`}
+                  onClick={(e) => { e.preventDefault(); openRx(rx); }}
+                  data-testid={`rx-list-pdf-${rx.prescription_id}`}
                   className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-bold rounded-full px-4 py-2.5">
                   <Download size={14} /> PDF
                 </a>

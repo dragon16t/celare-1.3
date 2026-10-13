@@ -43,6 +43,7 @@ CAT_IMAGES = {
 
 async def seed_defaults(db):
     """Idempotent seed of module categories + sample services (admin-editable)."""
+    await mp.migrate_pricing_v2()
     if await db.mp_categories.count_documents({}) == 0:
         doctor_cats = ["Acne & Pimples", "Pigmentation", "Anti-Aging", "Hair & Scalp",
                        "Sensitive Skin", "Skin Concerns", "General Dermatology", "View All"]
@@ -173,6 +174,7 @@ async def list_services(category_id: str = "", q: str = ""):
     if q:
         query["name"] = {"$regex": q, "$options": "i"}
     svcs = await Db.mp_services.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    c = await mp.cfg()
     for s in svcs:
         partners = await Db.mp_partners.find(
             {"application_status": "approved", "active": True, "paused": {"$ne": True},
@@ -180,8 +182,15 @@ async def list_services(category_id: str = "", q: str = ""):
             {"services.$": 1}).to_list(100)
         s["partner_count"] = len(partners)
         prices = [p["services"][0].get("price") for p in partners if p.get("services") and p["services"][0].get("price")]
-        s["from_price"] = min(prices) if prices else s.get("price")
+        _apply_price(s, min(prices) if prices else s.get("price"), c)
     return svcs
+
+
+def _apply_price(s: Dict[str, Any], base: Any, c: Dict[str, Any]):
+    pv = mp.price_view(base, c)
+    s.update({"price": pv["price"], "from_price": pv["price"], "mrp": pv["mrp"], "discount_pct": pv["discount_pct"]})
+    s.pop("commission_pct", None)
+    s.pop("price_range", None)
 
 
 @router.get("/services/{service_id}")
@@ -193,11 +202,18 @@ async def get_service(service_id: str):
         {"application_status": "approved", "active": True, "paused": {"$ne": True},
          "services": {"$elemMatch": {"service_id": service_id, "approval_status": "approved"}}},
         {"_id": 0, "partner_id": 1, "applicant.business_name": 1, "applicant.name": 1, "services.$": 1}).to_list(100)
-    s["partners"] = [{
-        "partner_id": p["partner_id"],
-        "name": (p.get("applicant") or {}).get("business_name") or (p.get("applicant") or {}).get("name"),
-        "price": (p.get("services") or [{}])[0].get("price", s.get("price")),
-    } for p in partners]
+    c = await mp.cfg()
+    out = []
+    for p in partners:
+        pv = mp.price_view((p.get("services") or [{}])[0].get("price") or s.get("price"), c)
+        out.append({"partner_id": p["partner_id"],
+                    "name": (p.get("applicant") or {}).get("business_name") or (p.get("applicant") or {}).get("name"),
+                    "price": pv["price"], "mrp": pv["mrp"], "discount_pct": pv["discount_pct"], "_base": pv["base"]})
+    out.sort(key=lambda x: x["_base"])
+    _apply_price(s, out[0]["_base"] if out else s.get("price"), c)
+    for o in out:
+        o.pop("_base", None)
+    s["partners"] = out
     return s
 
 
@@ -207,9 +223,10 @@ async def list_doctors(category: str = "", lat: float = 0, lng: float = 0, radiu
     if category and category.lower() not in ("view all", ""):
         query["professional.specialisation"] = {"$regex": category, "$options": "i"}
     docs = await Db.mp_doctors.find(query, {"_id": 0}).to_list(200)
+    c = await mp.cfg()
     out = []
     for d in docs:
-        pub = _public_doctor(d)
+        pub = _public_doctor(d, c)
         pub["online"] = mp.is_online(d)
         loc = d.get("personal") or {}
         dlat, dlng = loc.get("lat"), loc.get("lng")
@@ -222,13 +239,15 @@ async def list_doctors(category: str = "", lat: float = 0, lng: float = 0, radiu
             else:
                 pub["distance_km"] = None
         out.append(pub)
-    out.sort(key=lambda x: (x["distance_km"] is None, x["distance_km"] or 0))
+    out.sort(key=lambda x: (x.get("distance_km") is None, x.get("distance_km") or 0))
     return out
 
 
-def _public_doctor(d: Dict[str, Any]) -> Dict[str, Any]:
+def _public_doctor(d: Dict[str, Any], c: Dict[str, Any]) -> Dict[str, Any]:
     photo = (d.get("photo") or {})
+    pv = mp.price_view((d.get("consultation") or {}).get("fee"), c)
     return {
+        "mrp": pv["mrp"], "discount_pct": pv["discount_pct"],
         "doctor_id": d["doctor_id"],
         "name": (d.get("personal") or {}).get("name"),
         "qualification": (d.get("professional") or {}).get("qualification"),
@@ -236,7 +255,7 @@ def _public_doctor(d: Dict[str, Any]) -> Dict[str, Any]:
         "experience_years": (d.get("professional") or {}).get("experience_years"),
         "bio": (d.get("professional") or {}).get("bio"),
         "languages": (d.get("consultation") or {}).get("languages", []),
-        "fee": (d.get("consultation") or {}).get("fee"),
+        "fee": pv["price"],
         "duration_min": (d.get("consultation") or {}).get("duration_min", 20),
         "verified": True,
         "photo": photo.get("chosen") or photo.get("processed") or photo.get("original_url") or "",
@@ -249,12 +268,12 @@ async def get_doctor(doctor_id: str):
     d = await Db.mp_doctors.find_one({"doctor_id": doctor_id, "application_status": "approved", "active": True}, {"_id": 0})
     if not d:
         raise HTTPException(404, "Doctor not found")
-    out = _public_doctor(d)
+    out = _public_doctor(d, await mp.cfg())
     out["online"] = mp.is_online(d)
     out["engaged"] = bool(await Db.mp_consultations.find_one(
         {"doctor_id": doctor_id, "status": {"$in": ["in_progress", "completion_pending"]}}))
     booked = await Db.mp_consultations.find(
-        {"doctor_id": doctor_id, "status": {"$in": ["confirmed", "pending_payment"]}},
+        {"doctor_id": doctor_id, "status": {"$in": ["confirmed", "pending_payment", "in_progress"]}},
         {"_id": 0, "date": 1, "slot": 1}).to_list(500)
     out["booked_slots"] = booked
     return out
@@ -437,9 +456,8 @@ async def partner_apply(app: PartnerApplication):
         if not svc:
             raise HTTPException(400, f"Service {sel.service_id} is not an active catalogue service")
         price = sel.price if sel.price is not None else svc.get("price")
-        pr = svc.get("price_range") or {}
-        if pr and price is not None and not (pr.get("min", 0) <= price <= pr.get("max", 10**9)):
-            raise HTTPException(400, f"Price for {svc['name']} must be within ₹{pr.get('min')}–₹{pr.get('max')}")
+        if price is None or float(price) <= 0:
+            raise HTTPException(400, f"Set your price for {svc['name']}")
         valid.append({"service_id": sel.service_id, "service_name": svc["name"], "mode": sel.mode,
                       "price": price, "coverage": sel.coverage, "qualifications": sel.qualifications,
                       "approval_status": "pending"})
@@ -503,6 +521,7 @@ class ConfigUpdate(BaseModel):
     home_services_enabled: Optional[bool] = None
     platform_commission_pct: Optional[float] = None
     customer_fee_pct: Optional[float] = None
+    display_markup_pct: Optional[float] = None
     doctor_contact_policy: Optional[str] = None
     support_email: Optional[str] = None
 
@@ -941,6 +960,9 @@ async def admin_booking_action(module: str, booking_id: str, body: Dict[str, Any
                                                                     "paid_by": "admin_manual", "updated_at": mp.now()}})
         await mp.notify("customer", b["customer"]["email"], "Booking confirmed",
                         f"Your booking {booking_id} is confirmed.", "/my/bookings")
+        if module == "consultation":
+            from routes.mp_ops import on_consult_confirmed
+            await on_consult_confirmed({**b, "payment_status": "paid", "status": "confirmed"})
     elif action == "cancel":
         await coll.update_one({"booking_id": booking_id}, {"$set": {"status": "cancelled", "updated_at": mp.now(),
                                                                     "cancel_reason": body.get("reason", "")}})
@@ -1108,9 +1130,8 @@ async def provider_apply_authed(body: Dict[str, Any], authorization: str = Heade
         if not svc:
             raise HTTPException(400, f"Service {sel.service_id} is not an active catalogue service")
         price = sel.price if sel.price is not None else svc.get("price")
-        pr = svc.get("price_range") or {}
-        if pr and price is not None and not (pr.get("min", 0) <= price <= pr.get("max", 10**9)):
-            raise HTTPException(400, f"Price for {svc['name']} must be within ₹{pr.get('min')}–₹{pr.get('max')}")
+        if price is None or float(price) <= 0:
+            raise HTTPException(400, f"Set your price for {svc['name']}")
         valid.append({"service_id": sel.service_id, "service_name": svc["name"], "mode": sel.mode,
                       "price": price, "coverage": sel.coverage, "qualifications": sel.qualifications,
                       "approval_status": "pending"})
@@ -1129,3 +1150,69 @@ async def provider_apply_authed(body: Dict[str, Any], authorization: str = Heade
     await Db.mp_accounts.update_one({"account_id": acc["account_id"]}, {"$set": {"ref_id": doc["partner_id"]}})
     await mp.notify("admin", "all", "New service partner application", f"{app.name} applied", "/admin/partners-crm")
     return {"success": True, "application_id": doc["partner_id"], "status": "pending"}
+
+
+# ------------------------------------------------------- admin: pricing overrides + custom services
+@router.put("/admin/doctors/{doctor_id}/fee")
+async def admin_doctor_fee(doctor_id: str, body: Dict[str, float], x_admin_token: str = Header(None)):
+    await _check_admin(x_admin_token)
+    fee = float(body.get("fee") or 0)
+    if fee <= 0:
+        raise HTTPException(400, "Fee must be positive")
+    res = await Db.mp_doctors.update_one({"doctor_id": doctor_id}, {"$set": {"consultation.fee": fee}})
+    if not res.matched_count:
+        raise HTTPException(404, "Doctor not found")
+    await mp.audit("admin", "doctor_fee", "doctor", doctor_id, new=fee)
+    return {"success": True, "fee": fee, "pricing": mp.price_view(fee, await mp.cfg())}
+
+
+@router.put("/admin/partners/{partner_id}/services/{service_id}/price")
+async def admin_partner_service_price(partner_id: str, service_id: str, body: Dict[str, float],
+                                      x_admin_token: str = Header(None)):
+    await _check_admin(x_admin_token)
+    price = float(body.get("price") or 0)
+    if price <= 0:
+        raise HTTPException(400, "Price must be positive")
+    res = await Db.mp_partners.update_one({"partner_id": partner_id, "services.service_id": service_id},
+                                          {"$set": {"services.$.price": price}})
+    if not res.matched_count:
+        raise HTTPException(404, "Partner service not found")
+    await mp.audit("admin", "partner_service_price", "partner", partner_id, new={service_id: price})
+    return {"success": True, "price": price}
+
+
+@router.get("/admin/pricing-preview")
+async def admin_pricing_preview(base: float = 1000, x_admin_token: str = Header(None)):
+    await _check_admin(x_admin_token)
+    return mp.price_view(base, await mp.cfg())
+
+
+@router.get("/admin/custom-services")
+async def admin_custom_services(status: str = "", x_admin_token: str = Header(None)):
+    await _check_admin(x_admin_token)
+    q: Dict[str, Any] = {"created_by": {"$exists": True}}
+    if status:
+        q["status"] = status
+    return await Db.mp_services.find(q, {"_id": 0}).sort("created_at", -1).to_list(300)
+
+
+@router.post("/admin/custom-services/{service_id}/decision")
+async def admin_custom_service_decision(service_id: str, body: Dict[str, str], x_admin_token: str = Header(None)):
+    await _check_admin(x_admin_token)
+    decision = body.get("decision")
+    if decision not in ("approved", "rejected"):
+        raise HTTPException(400, "decision must be approved|rejected")
+    svc = await Db.mp_services.find_one({"service_id": service_id, "created_by": {"$exists": True}}, {"_id": 0})
+    if not svc:
+        raise HTTPException(404, "Custom service not found")
+    if decision == "approved" and not (svc.get("thumbnail") or svc.get("images")):
+        raise HTTPException(400, "Add an image before approving")
+    await Db.mp_services.update_one({"service_id": service_id}, {"$set": {
+        "status": "active" if decision == "approved" else "rejected", "review_note": body.get("reason", ""),
+        "updated_at": mp.now()}})
+    await Db.mp_partners.update_one({"partner_id": svc["created_by"], "services.service_id": service_id},
+                                    {"$set": {"services.$.approval_status": decision}})
+    await mp.notify("partner", svc["created_by"], f"Custom service {decision}",
+                    f"{svc['name']} was {decision}. {body.get('reason', '')}", "/partner")
+    await mp.audit("admin", f"custom_service:{decision}", "service", service_id)
+    return {"success": True, "status": decision}

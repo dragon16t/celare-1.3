@@ -30,12 +30,19 @@ SLOT_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 # ================================================================ helpers
 async def broadcast_offers(booking: Dict[str, Any], online_only: bool = False, expiry_minutes: Optional[int] = None):
+    if booking.get("target_partner_id"):
+        return await _broadcast(booking, online_only, expiry_minutes, booking["target_partner_id"])
+    return await _broadcast(booking, online_only, expiry_minutes, None)
+
+
+async def _broadcast(booking: Dict[str, Any], online_only: bool, expiry_minutes: Optional[int], target: Optional[str]):
     """Offer a home-service booking to every eligible partner (first-accept wins).
     online_only=True restricts dispatch to partners who are online right now (instant bookings)."""
     svc = await Db.mp_services.find_one({"service_id": booking["service_id"]}, {"_id": 0})
     partners = await Db.mp_partners.find(
         {"application_status": "approved", "active": True, "paused": {"$ne": True},
-         "services": {"$elemMatch": {"service_id": booking["service_id"], "approval_status": "approved"}}},
+         "services": {"$elemMatch": {"service_id": booking["service_id"], "approval_status": "approved"}},
+         **({"partner_id": target} if target else {})},
         {"_id": 0}).to_list(200)
     if online_only:
         partners = [p for p in partners if mp.is_online(p)]
@@ -51,7 +58,7 @@ async def broadcast_offers(booking: Dict[str, Any], online_only: bool = False, e
         await Db.mp_booking_offers.insert_one({
             "booking_id": booking["booking_id"], "partner_id": p["partner_id"],
             "expires_at": expiry, "status": "pending",
-            "expected_earnings": round((sel.get("price") or booking.get("price", 0)) * (1 - (svc or {}).get("commission_pct", 20) / 100), 2),
+            "expected_earnings": booking.get("provider_earning") or round((sel.get("price") or booking.get("price", 0)) * (1 - cfg.get("platform_commission_pct", 15) / 100), 2),
             "created_at": mp.now()})
         await mp.notify("partner", p["partner_id"], "New booking request",
                         f"{booking.get('service_name')} on {booking.get('date')} {booking.get('slot')}",
@@ -103,41 +110,66 @@ async def _verify_completion_otp(coll, booking_id: str, code: str, actor: str) -
 
 
 async def _settle(booking: Dict[str, Any], kind: str):
-    """Ledger settlement after verified completion.
-    Consultations: doctor gets fee minus platform commission; platform books 'Celesta commission'.
-    Home services: partner gets their full listed price; platform books the customer fee as
-    'Celesta commission'. Cash bookings: partner already holds cash — platform books a receivable."""
+    """Ledger settlement after verified completion. Provider gets listed price minus commission;
+    platform keeps the rest (commission + customer markup). Every entry carries a breakdown."""
     cfg = await mp.cfg()
+    if await Db.mp_wallet_ledger.find_one({"booking_id": booking["booking_id"], "type": "credit", "ref": "settlement"}):
+        return
+    comm = cfg.get("platform_commission_pct", 15)
     if kind == "consultation":
-        commission_pct = cfg.get("platform_commission_pct", 20)
         owner_type, owner_id = "doctor", booking["doctor_id"]
-        gross = booking.get("fee", 0)
-        if await Db.mp_wallet_ledger.find_one({"booking_id": booking["booking_id"], "type": "credit", "ref": "settlement"}):
-            return
-        earnings = round(gross * (1 - commission_pct / 100), 2)
-        platform_cut = round(gross - earnings, 2)
-        await mp.wallet_move(owner_type, owner_id, earnings, "credit", "settlement", booking["booking_id"])
-        if platform_cut > 0:
-            await mp.wallet_move("platform", "main", platform_cut, "credit",
-                                 f"Celesta commission ({commission_pct:.0f}%)", booking["booking_id"])
+        paid = float(booking.get("fee", 0))
+        base = float(booking.get("base_fee") or paid)
     else:
         owner_type, owner_id = "partner", booking["partner_id"]
-        gross = booking.get("price", 0)
-        fee_amount = booking.get("fee_amount", round(gross * cfg.get("customer_fee_pct", 15) / 100, 2))
-        if await Db.mp_wallet_ledger.find_one({"booking_id": booking["booking_id"], "type": "credit", "ref": "settlement"}):
-            return
-        if booking.get("payment_method") == "pay_after_service":
-            if fee_amount > 0:
-                await mp.wallet_move("platform", "main", fee_amount, "credit",
-                                     "Celesta commission (cash booking — receivable)", booking["booking_id"])
-        else:
-            if gross > 0:
-                await mp.wallet_move(owner_type, owner_id, gross, "credit", "settlement", booking["booking_id"])
-            if fee_amount > 0:
-                await mp.wallet_move("platform", "main", fee_amount, "credit",
-                                     "Celesta commission (customer fee)", booking["booking_id"])
+        paid = float(booking.get("total_amount") or booking.get("price", 0))
+        base = float(booking.get("price", 0))
+    earning = float(booking.get("provider_earning") or round(base * (1 - comm / 100), 2))
+    meta = {"customer_paid": paid, "listed_price": base, "commission_pct": booking.get("commission_pct", comm),
+            "commission": round(base - earning, 2), "you_earn": earning}
+    platform = round(paid - earning, 2)
+    if kind == "home" and booking.get("payment_method") == "pay_after_service":
+        meta["note"] = "Cash collected by you — commission is settled from your wallet"
+        await Db.mp_wallet_ledger.insert_one({
+            "entry_id": mp.uid("led"), "owner_type": owner_type, "owner_id": owner_id, "type": "info",
+            "amount": earning, "balance_after": await mp.wallet_balance(owner_type, owner_id),
+            "ref": "settlement", "booking_id": booking["booking_id"], "at": mp.now(), "meta": meta})
+        if platform > 0:
+            await mp.wallet_move("platform", "main", platform, "credit", "Celesta commission (cash booking — receivable)",
+                                 booking["booking_id"], meta)
+    else:
+        if earning > 0:
+            await mp.wallet_move(owner_type, owner_id, earning, "credit", "settlement", booking["booking_id"], meta)
+        if platform > 0:
+            await mp.wallet_move("platform", "main", platform, "credit", f"Celesta commission ({meta['commission_pct']:.0f}% + markup)",
+                                 booking["booking_id"], meta)
     await mp.notify(owner_type, owner_id, "Booking completed",
-                    f"Booking {booking['booking_id']} completed and settled.", "/doctor" if kind == "consultation" else "/partner")
+                    f"Booking {booking['booking_id']} settled — ₹{earning} credited.", "/doctor" if kind == "consultation" else "/partner")
+
+
+async def on_consult_confirmed(b: Dict[str, Any]):
+    """Paid consultation: create video meeting, email + notify doctor and customer."""
+    from services import zoom_service
+    upd: Dict[str, Any] = {}
+    if not b.get("zoom") and zoom_service.configured():
+        start = None
+        if b.get("slot") and b.get("slot") != "Instant":
+            start = f"{b['date']}T{b['slot']}:00"
+        z = await zoom_service.create_meeting(f"Celesta Glow consultation {b['booking_id']}", start, 30)
+        if z:
+            upd["zoom"] = z
+    if upd:
+        await Db.mp_consultations.update_one({"booking_id": b["booking_id"]}, {"$set": upd})
+    d = await Db.mp_doctors.find_one({"doctor_id": b.get("doctor_id")}, {"_id": 0, "personal": 1}) if b.get("doctor_id") else None
+    when = f"{b.get('date')} at {b.get('slot')}"
+    if d:
+        await mp.send_mail(d["personal"]["email"], f"New paid consultation [{b['booking_id']}]",
+                           f"Dr. {d['personal']['name']}, {b['customer']['name']} booked and paid for a consultation on {when}. "
+                           f"Open your doctor dashboard to join the call.")
+        await mp.notify("doctor", b["doctor_id"], "New paid consultation", f"{b['customer']['name']} — {when}", "/doctor")
+    await mp.send_mail(b["customer"]["email"], f"Consultation confirmed [{b['booking_id']}]",
+                       f"Your consultation with Dr. {b.get('doctor_name') or 'your dermatologist'} on {when} is confirmed. "
+                       f"Use 'Call doctor' in My Bookings at your slot time.")
 
 
 # ================================================================ customer bookings
@@ -164,8 +196,12 @@ async def book_consultation(body: ConsultBookIn):
     except Exception:
         raise HTTPException(409, "This slot was just taken — pick another")
     booking_id = mp.uid("cns").upper().replace("CNS_", "CG-C-")
-    fee = (d.get("consultation") or {}).get("fee", 0)
+    cfg_ = await mp.cfg()
+    pv = mp.price_view((d.get("consultation") or {}).get("fee", 0), cfg_)
+    fee = pv["price"]
     booking = {
+        "base_fee": pv["base"], "provider_earning": pv["provider_earning"], "platform_earning": pv["platform_earning"],
+        "commission_pct": cfg_.get("platform_commission_pct", 15), "mrp": pv["mrp"],
         "booking_id": booking_id, "doctor_id": body.doctor_id,
         "doctor_name": d["personal"]["name"], "date": body.date, "slot": body.slot,
         "customer": {"name": body.name, "email": body.email.lower(), "phone": body.phone},
@@ -186,7 +222,7 @@ async def book_consultation(body: ConsultBookIn):
     booking.pop("_id", None)
     return {"success": True, "booking": booking, "payments_configured": rz is not None,
             "message": None if rz is not None else
-            "Online payments are not configured yet. Your slot is reserved — our team will confirm payment shortly."}
+            "Your slot is held. Consultations are prepaid — it confirms as soon as payment is received."}
 
 
 class ConsultVerifyIn(BaseModel):
@@ -221,10 +257,7 @@ async def verify_consult_payment(body: ConsultVerifyIn):
             await mp.notify("customer", b["customer"]["email"], "Finding your doctor",
                             "Payment received — no doctor is online right now; your request is queued.", "/my/bookings")
         return {"success": True, "status": "pending_assignment", "dispatched": notified}
-    await mp.send_mail(b["customer"]["email"], f"Consultation confirmed [{body.booking_id}]",
-                       f"Your consultation with {b['doctor_name']} on {b['date']} at {b['slot']} is confirmed.")
-    await mp.notify("doctor", b["doctor_id"], "New consultation booked",
-                    f"{b['customer']['name']} — {b['date']} {b['slot']}", "/doctor")
+    await on_consult_confirmed(b)
     return {"success": True, "status": "confirmed"}
 
 
@@ -243,6 +276,7 @@ class HomeBookIn(BaseModel):
     notes: str = ""
     instant: bool = False
     payment_method: str = "online"  # online | pay_after_service
+    partner_id: Optional[str] = None
 
 
 @router.post("/home/book")
@@ -256,10 +290,18 @@ async def book_home_service(body: HomeBookIn):
     booking_id = mp.uid("hms").upper().replace("HMS_", "CG-H-")
     date = body.date or dt.datetime.now(dt.timezone.utc).date().isoformat()
     slot = body.slot or "ASAP"
-    price = svc.get("price", 0)
-    fee_pct = cfg.get("customer_fee_pct", 15.0)
-    fee_amount = round(price * fee_pct / 100, 2)
-    total = round(price + fee_amount, 2)
+    pq: Dict[str, Any] = {"application_status": "approved", "active": True, "paused": {"$ne": True},
+                          "services": {"$elemMatch": {"service_id": body.service_id, "approval_status": "approved"}}}
+    if body.partner_id:
+        pq["partner_id"] = body.partner_id
+    plist = await Db.mp_partners.find(pq, {"_id": 0, "partner_id": 1, "services.$": 1}).to_list(100)
+    if body.partner_id and not plist:
+        raise HTTPException(404, "This professional is not available for this service")
+    bases = [p["services"][0].get("price") for p in plist if p.get("services") and p["services"][0].get("price")]
+    pv = mp.price_view(min(bases) if bases else svc.get("price", 0), cfg)
+    price = pv["base"]
+    fee_amount = pv["platform_earning"]
+    total = pv["price"]
     method = body.payment_method if body.payment_method in ("online", "pay_after_service") else "online"
     rz = mp.razorpay()
     pay_online = method == "online" and rz is not None
@@ -271,6 +313,8 @@ async def book_home_service(body: HomeBookIn):
                      "address": body.address, "city": body.city, "pincode": body.pincode,
                      "lat": body.lat, "lng": body.lng},
         "notes": body.notes, "price": price, "fee_amount": fee_amount, "total_amount": total,
+        "provider_earning": pv["provider_earning"], "platform_earning": pv["platform_earning"], "mrp": pv["mrp"],
+        "commission_pct": cfg.get("platform_commission_pct", 15), "target_partner_id": body.partner_id,
         "duration_min": svc.get("duration_min", 60), "payment_method": method,
         "status": "pending_payment" if pay_online else "pending_assignment",
         "payment_status": "unpaid",
@@ -393,6 +437,12 @@ async def consult_room(booking_id: str, authorization: str = Header(None), email
         raise HTTPException(403, "Only the booked customer and doctor can join this room")
     if b["status"] not in ("confirmed", "in_progress", "completion_pending", "completed"):
         raise HTTPException(400, f"Consultation is {b['status']} — the room opens for confirmed bookings")
+    z = b.get("zoom") or {}
+    if z.get("join_url"):
+        return {"provider": "zoom", "join_url": z["start_url"] if role == "doctor" and z.get("start_url") else z["join_url"],
+                "web_url": f"https://app.zoom.us/wc/join/{z['meeting_id']}?pwd={z.get('password', '')}",
+                "booking_id": booking_id, "doctor_name": b.get("doctor_name"), "date": b.get("date"),
+                "slot": b.get("slot"), "status": b["status"], "role": role}
     return {"provider": "jitsi", "domain": "meet.jit.si",
             "room": f"celestaglow-{booking_id.lower()}-{b.get('room_secret', '')}",
             "booking_id": booking_id, "doctor_name": b.get("doctor_name"),
@@ -520,10 +570,10 @@ async def doctor_choose_photo(body: Dict[str, str], authorization: str = Header(
 @router.get("/doctor/bookings")
 async def doctor_bookings(status: str = "", authorization: str = Header(None)):
     d = await _doctor(authorization)
-    q: Dict[str, Any] = {"doctor_id": d["doctor_id"]}
+    q: Dict[str, Any] = {"doctor_id": d["doctor_id"], "payment_status": "paid"}
     if status:
         q["status"] = status
-    items = await Db.mp_consultations.find(q, {"_id": 0, "otp": 0}).sort("created_at", -1).to_list(300)
+    items = await Db.mp_consultations.find(q, {"_id": 0, "otp": 0, "razorpay_order_id": 0, "platform_earning": 0}).sort("created_at", -1).to_list(300)
     return items
 
 
@@ -688,7 +738,16 @@ async def doctor_wallet(authorization: str = Header(None)):
                                             {"_id": 0}).sort("at", -1).to_list(100)
     wdr = await Db.mp_withdrawals.find({"owner_type": "doctor", "owner_id": d["doctor_id"]},
                                        {"_id": 0}).sort("at", -1).to_list(50)
-    return {"balance": bal, "ledger": ledger, "withdrawals": wdr}
+    return {"balance": bal, "ledger": ledger, "withdrawals": wdr, **(await _wallet_terms(ledger))}
+
+
+async def _wallet_terms(ledger: List[Dict[str, Any]]) -> Dict[str, Any]:
+    c = await mp.cfg()
+    settled = [e.get("meta") or {} for e in ledger if e.get("ref") == "settlement"]
+    return {"commission_pct": c.get("platform_commission_pct", 15),
+            "total_listed": round(sum(m.get("listed_price", 0) for m in settled), 2),
+            "total_commission": round(sum(m.get("commission", 0) for m in settled), 2),
+            "total_earned": round(sum(m.get("you_earn", 0) for m in settled), 2)}
 
 
 @router.post("/doctor/withdraw")
@@ -781,7 +840,7 @@ async def partner_accept(booking_id: str, authorization: str = Header(None)):
         {"booking_id": booking_id, "status": "pending_assignment"},
         {"$set": {"status": "assigned", "partner_id": p["partner_id"],
                   "partner_name": p["applicant"].get("business_name") or p["applicant"]["name"],
-                  "price": sel.get("price") or None, "assigned_at": mp.now(), "updated_at": mp.now()},
+                  "assigned_at": mp.now(), "updated_at": mp.now()},
          "$push": {"timeline": {"status": "assigned", "at": mp.now(), "by": p["partner_id"]}}},
         return_document=True)
     if not res:
@@ -790,9 +849,6 @@ async def partner_accept(booking_id: str, authorization: str = Header(None)):
                                            {"$set": {"status": "expired"}})
     await Db.mp_booking_offers.update_one({"booking_id": booking_id, "partner_id": p["partner_id"]},
                                           {"$set": {"status": "accepted"}})
-    if res.get("price") is None:
-        await Db.mp_home_bookings.update_one({"booking_id": booking_id},
-                                             {"$set": {"price": res.get("price") or 0}})
     await mp.notify("customer", res["customer"]["email"], "Partner assigned",
                     f"{res['partner_name']} accepted your booking {booking_id}.", f"/track/{booking_id}")
     await mp.send_mail(res["customer"]["email"], "Partner assigned for your home service",
@@ -936,9 +992,13 @@ async def partner_verify(booking_id: str, body: Dict[str, str], authorization: s
 @router.get("/partner/services")
 async def partner_services(authorization: str = Header(None)):
     p = await _partner(authorization)
-    catalogue = await Db.mp_services.find({"status": "active"}, {"_id": 0}).to_list(300)
+    catalogue = await Db.mp_services.find({"status": "active", "created_by": {"$exists": False}},
+                                          {"_id": 0, "commission_pct": 0, "price_range": 0}).to_list(300)
+    custom = await Db.mp_services.find({"created_by": p["partner_id"]}, {"_id": 0}).to_list(100)
     mine = {s["service_id"]: s for s in p.get("services", [])}
-    return {"catalogue": catalogue, "mine": list(mine.values())}
+    c = await mp.cfg()
+    return {"catalogue": catalogue, "mine": list(mine.values()), "custom": custom,
+            "commission_pct": c.get("platform_commission_pct", 15)}
 
 
 @router.post("/partner/services/request")
@@ -950,10 +1010,9 @@ async def partner_request_service(body: Dict[str, Any], authorization: str = Hea
         raise HTTPException(404, "Not an active catalogue service")
     if any(s["service_id"] == sid for s in p.get("services", [])):
         raise HTTPException(409, "Already requested")
-    price = body.get("price", svc.get("price"))
-    pr = svc.get("price_range") or {}
-    if pr and not (pr.get("min", 0) <= float(price) <= pr.get("max", 10**9)):
-        raise HTTPException(400, f"Price must be within ₹{pr.get('min')}–₹{pr.get('max')}")
+    price = body.get("price") or svc.get("price")
+    if not price or float(price) <= 0:
+        raise HTTPException(400, "Set your price")
     sel = {"service_id": sid, "service_name": svc["name"], "mode": body.get("mode", "home"),
            "price": float(price), "coverage": body.get("coverage", ""),
            "qualifications": body.get("qualifications", ""), "approval_status": "pending"}
@@ -971,7 +1030,7 @@ async def partner_wallet(authorization: str = Header(None)):
                                             {"_id": 0}).sort("at", -1).to_list(100)
     wdr = await Db.mp_withdrawals.find({"owner_type": "partner", "owner_id": p["partner_id"]},
                                        {"_id": 0}).sort("at", -1).to_list(50)
-    return {"balance": bal, "ledger": ledger, "withdrawals": wdr}
+    return {"balance": bal, "ledger": ledger, "withdrawals": wdr, **(await _wallet_terms(ledger))}
 
 
 @router.post("/partner/withdraw")
@@ -1086,7 +1145,7 @@ async def _dispatch_instant(booking: Dict[str, Any]):
             {"booking_id": booking["booking_id"], "doctor_id": c["doctor_id"]},
             {"$setOnInsert": {"booking_id": booking["booking_id"], "doctor_id": c["doctor_id"], "kind": "consult",
                               "expires_at": expiry, "status": "pending",
-                              "expected_earnings": round(cfee * (1 - commission / 100), 2), "created_at": mp.now()}},
+                              "expected_earnings": booking.get("provider_earning") or round(cfee * (1 - commission / 100), 2), "created_at": mp.now()}},
             upsert=True)
         await mp.notify("doctor", c["doctor_id"], "Instant consultation request",
                         f"{booking['customer']['name']} paid and is waiting — accept to connect.", "/doctor")
@@ -1104,17 +1163,22 @@ async def instant_consult(body: InstantConsultIn):
     candidates = [d for d in await Db.mp_doctors.find(q, {"_id": 0}).to_list(100) if mp.is_online(d)]
     if not candidates:
         raise HTTPException(409, "No dermatologists are online right now — schedule a slot instead.")
-    fee = min((c.get("consultation") or {}).get("fee", 999) for c in candidates)
+    rz = mp.razorpay()
+    if rz is None:
+        raise HTTPException(503, "Instant consultations need online payment, which is being set up — please schedule a slot.")
+    pv = mp.price_view(min((c.get("consultation") or {}).get("fee", 999) for c in candidates), cfg)
+    fee = pv["price"]
     booking_id = mp.uid("cns").upper().replace("CNS_", "CG-C-")
     targeted = candidates[0] if body.doctor_id else None
-    rz = mp.razorpay()
     booking = {
         "booking_id": booking_id, "type": "instant",
         "doctor_id": targeted["doctor_id"] if targeted else None,
         "doctor_name": targeted["personal"]["name"] if targeted else None,
         "date": dt.datetime.now(dt.timezone.utc).date().isoformat(), "slot": "Instant",
         "customer": {"name": body.name, "email": body.email.lower(), "phone": body.phone},
-        "fee": fee, "total_amount": fee, "status": "pending_payment" if rz else "pending_assignment",
+        "fee": fee, "total_amount": fee, "status": "pending_payment",
+        "base_fee": pv["base"], "provider_earning": pv["provider_earning"], "platform_earning": pv["platform_earning"],
+        "commission_pct": cfg.get("platform_commission_pct", 15), "mrp": pv["mrp"],
         "payment_status": "unpaid", "payment_method": "online",
         "room_secret": secrets.token_hex(4), "created_at": mp.now(), "updated_at": mp.now(),
     }
@@ -1162,7 +1226,6 @@ async def doctor_accept_instant(booking_id: str, authorization: str = Header(Non
         {"booking_id": booking_id, "status": "pending_assignment"},
         {"$set": {"status": "confirmed", "doctor_id": d["doctor_id"],
                   "doctor_name": d["personal"]["name"],
-                  "fee": (d.get("consultation") or {}).get("fee", 0),
                   "assigned_at": mp.now(), "updated_at": mp.now()}},
         return_document=True)
     if not res:
@@ -1171,6 +1234,7 @@ async def doctor_accept_instant(booking_id: str, authorization: str = Header(Non
                                            {"$set": {"status": "expired"}})
     await Db.mp_booking_offers.update_one({"booking_id": booking_id, "doctor_id": d["doctor_id"]},
                                           {"$set": {"status": "accepted"}})
+    await on_consult_confirmed(res)
     await mp.send_mail(res["customer"]["email"], "A dermatologist is ready for you",
                        f"Dr. {d['personal']['name']} accepted your instant consultation {booking_id}. Open the site and join your video room now.")
     await mp.notify("customer", res["customer"]["email"], "Doctor accepted",
@@ -1245,3 +1309,82 @@ async def admin_platform_wallet(x_admin_token: str = Header(None)):
     ledger = await Db.mp_wallet_ledger.find({"owner_type": "platform", "owner_id": "main"},
                                             {"_id": 0}).sort("at", -1).to_list(200)
     return {"balance": bal, "ledger": ledger}
+
+
+# ================================================================ partner custom services + pricing
+class CustomServiceIn(BaseModel):
+    name: str
+    category_id: str = ""
+    short_desc: str = ""
+    full_desc: str = ""
+    duration_min: int = 60
+    price: float
+    includes: List[str] = []
+
+
+@router.post("/partner/services/custom")
+async def partner_create_custom_service(body: CustomServiceIn, authorization: str = Header(None)):
+    p = await _partner(authorization)
+    if body.price <= 0 or not body.name.strip():
+        raise HTTPException(400, "Name and price are required")
+    cat = await Db.mp_categories.find_one({"cat_id": body.category_id}, {"_id": 0}) if body.category_id else None
+    sid = mp.uid("svc")
+    await Db.mp_services.insert_one({
+        "service_id": sid, "name": body.name.strip(), "category_id": body.category_id,
+        "category_title": (cat or {}).get("title", ""), "short_desc": body.short_desc,
+        "full_desc": body.full_desc or body.short_desc, "includes": body.includes, "excludes": [],
+        "duration_min": body.duration_min, "mode": "home", "price": body.price, "tax_pct": 0,
+        "offer_eligible": True, "cancellation_policy": "", "qualifications": [], "equipment": "", "prep": "",
+        "aftercare": "", "warnings": "", "patch_test": False, "materials_included": True, "locations": [],
+        "age_restriction": "", "images": [], "thumbnail": "", "status": "pending_review",
+        "created_by": p["partner_id"],
+        "created_by_name": p["applicant"].get("business_name") or p["applicant"]["name"],
+        "created_at": mp.now(), "updated_at": mp.now()})
+    await Db.mp_partners.update_one({"partner_id": p["partner_id"]}, {"$push": {"services": {
+        "service_id": sid, "service_name": body.name.strip(), "mode": "home", "price": body.price,
+        "coverage": "", "qualifications": "", "approval_status": "pending", "custom": True}}})
+    await mp.notify("admin", "all", "Custom service for review", f"{p['applicant']['name']} created {body.name}",
+                    "/admin/partners")
+    return {"success": True, "service_id": sid, "status": "pending_review"}
+
+
+@router.post("/partner/services/{service_id}/image")
+async def partner_custom_service_image(service_id: str, file: UploadFile = File(...), authorization: str = Header(None)):
+    p = await _partner(authorization)
+    svc = await Db.mp_services.find_one({"service_id": service_id, "created_by": p["partner_id"]}, {"_id": 0})
+    if not svc:
+        raise HTTPException(404, "You can add images only to services you created")
+    data = await file.read()
+    if len(data) > 8 * 1024 * 1024:
+        raise HTTPException(400, "Image must be under 8MB")
+    if (file.content_type or "") not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(400, "Only JPG, PNG or WebP images are allowed")
+    ext = (file.filename or "img.jpg").rsplit(".", 1)[-1].lower()
+    url = await mp.store_image(data, f"svc-{service_id}-{secrets.token_hex(3)}", ext)
+    images = (svc.get("images") or []) + [url]
+    await Db.mp_services.update_one({"service_id": service_id}, {"$set": {
+        "images": images, "thumbnail": svc.get("thumbnail") or url, "updated_at": mp.now()}})
+    return {"success": True, "url": url}
+
+
+@router.put("/partner/services/{service_id}/price")
+async def partner_update_price(service_id: str, body: Dict[str, float], authorization: str = Header(None)):
+    p = await _partner(authorization)
+    price = float(body.get("price") or 0)
+    if price <= 0:
+        raise HTTPException(400, "Price must be positive")
+    res = await Db.mp_partners.update_one({"partner_id": p["partner_id"], "services.service_id": service_id},
+                                          {"$set": {"services.$.price": price}})
+    if not res.matched_count:
+        raise HTTPException(404, "Service not in your list")
+    await Db.mp_services.update_one({"service_id": service_id, "created_by": p["partner_id"]}, {"$set": {"price": price}})
+    return {"success": True, "price": price}
+
+
+@router.get("/provider/pricing")
+async def provider_pricing(base: float = 1000):
+    """What a provider earns from a listed price (commission only — customer markup is not shown)."""
+    c = await mp.cfg()
+    pv = mp.price_view(base, c)
+    return {"listed": pv["base"], "commission_pct": c.get("platform_commission_pct", 15),
+            "you_earn": pv["provider_earning"]}

@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { mp } from '../../utils/mpApi';
 import { openRazorpayCheckout } from '../../utils/razorpay';
 import SEOHead from '../../components/SEOHead';
+import { PriceTag, DiscountBadge } from '../../components/mp/PriceTag';
+import { getSavedLocation } from '../../utils/userLocation';
 
 const SLOTS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
@@ -20,23 +22,25 @@ const ServiceDetailPage = () => {
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', city: '', pincode: '', notes: '' });
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
+  const [pro, setPro] = useState('');
 
   useEffect(() => {
     mp.get(`/services/${serviceId}`).then((r) => setSvc(r.data)).catch(() => setSvc(false));
     mp.get('/config').then((r) => setCfg(r.data)).catch(() => {});
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setForm((f) => ({ ...f, lat: pos.coords.latitude, lng: pos.coords.longitude })),
-        () => {}, { maximumAge: 300000, timeout: 8000 });
+    const loc = getSavedLocation();
+    if (loc?.lat != null) {
+      setForm((f) => ({ ...f, lat: loc.lat, lng: loc.lng, city: f.city || loc.city || '', pincode: f.pincode || loc.pincode || '',
+        address: f.address || loc.formatted || '' }));
     }
   }, [serviceId]);
 
   if (svc === null) return <div className="py-24 text-center text-stone-400">Loading…</div>;
   if (svc === false) return <div className="py-24 text-center" data-testid="service-not-found">Service not available. <Link to="/services" className="text-emerald-700 underline">Back</Link></div>;
 
-  const feePct = cfg?.customer_fee_pct ?? 15;
-  const feeAmt = Math.round(svc.price * feePct / 100 * 100) / 100;
-  const total = svc.price + feeAmt;
+  const chosen = (svc.partners || []).find((p) => p.partner_id === pro);
+  const total = chosen ? chosen.price : svc.price;
+  const mrp = chosen ? chosen.mrp : svc.mrp;
+  const discount = chosen ? chosen.discount_pct : svc.discount_pct;
 
   const finish = (data, paid) => setResult({ ...data, paid });
 
@@ -46,7 +50,7 @@ const ServiceDetailPage = () => {
     setBusy(true);
     try {
       const payload = {
-        service_id: serviceId, payment_method: payMethod, ...form,
+        service_id: serviceId, payment_method: payMethod, ...form, ...(pro ? { partner_id: pro } : {}),
         ...(mode === 'instant' ? { instant: true } : { date, slot }),
       };
       const r = await mp.post('/home/book', payload);
@@ -132,11 +136,27 @@ const ServiceDetailPage = () => {
             <div className="sticky top-6 bg-white rounded-3xl border border-stone-200 p-5 sm:p-6" data-testid="booking-panel">
               <p className="text-[10px] font-bold tracking-wider text-emerald-700 uppercase">{svc.category_title}</p>
               <h1 className="text-2xl font-extrabold text-stone-900 mt-1">{svc.name}</h1>
-              <div className="mt-3 bg-stone-50 rounded-2xl p-3.5 text-sm space-y-1">
-                <p className="flex justify-between"><span className="text-stone-500">Service price</span><b>₹{svc.price}</b></p>
-                <p className="flex justify-between"><span className="text-stone-500">Platform fee ({feePct}%)</span><b>₹{feeAmt}</b></p>
-                <p className="flex justify-between border-t border-stone-200 pt-1.5 text-base"><span className="font-bold">Total</span><b className="text-emerald-800">₹{total}</b></p>
+              <div className="mt-3 bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-100 rounded-2xl p-3.5 flex items-center justify-between" data-testid="service-price-box">
+                <div>
+                  <PriceTag price={total} mrp={mrp} size="lg" />
+                  {mrp > total && <p className="text-[11px] font-bold text-emerald-700">You save ₹{mrp - total} · all inclusive</p>}
+                </div>
+                <DiscountBadge pct={discount} />
               </div>
+              {svc.partners?.length > 0 && (
+                <div className="mt-3" data-testid="pro-picker">
+                  <p className="text-[11px] font-bold text-stone-500 uppercase mb-1.5">Choose your professional</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {[{ partner_id: '', name: 'Fastest available', price: svc.price }, ...svc.partners].map((p) => (
+                      <button type="button" key={p.partner_id || 'any'} onClick={() => setPro(p.partner_id)} data-testid={`pro-${p.partner_id || 'any'}`}
+                        className={`shrink-0 rounded-xl border px-3 py-2 text-left ${pro === p.partner_id ? 'border-emerald-600 bg-emerald-50' : 'border-stone-200'}`}>
+                        <span className="block text-xs font-extrabold text-stone-800">{p.name}</span>
+                        <span className="block text-[11px] text-emerald-700 font-bold">₹{p.price}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <form onSubmit={book} className="mt-4 space-y-3" data-testid="home-book-form">
                 <div className="grid grid-cols-2 gap-2 p-1 bg-stone-100 rounded-full" data-testid="booking-mode-toggle">
                   {[['instant', 'Book now'], ['scheduled', 'Schedule']].map(([m, label]) => (
@@ -146,7 +166,7 @@ const ServiceDetailPage = () => {
                 </div>
                 {mode === 'instant' && (
                   <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl p-2.5" data-testid="instant-hint">
-                    Your request goes only to partners who are <b>online right now</b> — the first to accept comes as soon as possible.
+                    Goes to pros who are <b>online right now</b> — first to accept is on the way.
                   </p>
                 )}
                 {mode === 'scheduled' && (
@@ -187,7 +207,7 @@ const ServiceDetailPage = () => {
                   className="w-full bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-extrabold rounded-full py-3.5 text-sm">
                   {busy ? 'Processing…' : payMethod === 'online' ? `Pay ₹${total} & book` : `Confirm booking — pay ₹${total} after service`}
                 </button>
-                <p className="text-[11px] text-stone-400 text-center">A verified partner accepts your request. Completion is OTP-verified and you can review the service afterwards.</p>
+                <p className="text-[11px] text-stone-400 text-center">Verified pros · live tracking · OTP-secured completion</p>
               </form>
             </div>
           </div>

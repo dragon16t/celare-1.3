@@ -35,7 +35,9 @@ async def autocomplete(
     country: str = Query("in", description="ISO country code"),
 ):
     """Places Autocomplete → suggestion list for the location modal."""
-    key = _require_key()
+    key = _get_key()
+    if not key:
+        return await _osm_search(q, country)
     url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
     params = {
         "input": q,
@@ -64,6 +66,9 @@ async def autocomplete(
 @router.get("/place-details")
 async def place_details(place_id: str = Query(...)):
     """Resolve a place_id → coordinates + a full formatted address."""
+    if place_id.startswith("osm:"):
+        lat, lng = place_id[4:].split(",")
+        return await _osm_reverse(float(lat), float(lng))
     key = _require_key()
     url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {"place_id": place_id, "fields": "geometry,formatted_address,address_component", "key": key}
@@ -78,7 +83,9 @@ async def place_details(place_id: str = Query(...)):
 @router.get("/reverse-geocode")
 async def reverse_geocode(lat: float, lng: float):
     """Coordinates → human-readable address (used by 'Use my current location')."""
-    key = _require_key()
+    key = _get_key()
+    if not key:
+        return await _osm_reverse(lat, lng)
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"latlng": f"{lat},{lng}", "key": key}
     async with httpx.AsyncClient(timeout=8.0) as client:
@@ -109,3 +116,37 @@ def _shape_geocode(lat: Optional[float], lng: Optional[float], comps, formatted:
         "state": grab(["administrative_area_level_1"]),
         "pincode": grab(["postal_code"]),
     }
+
+
+_OSM_HDR = {"User-Agent": "CelestaGlow/1.0 (support@celestaglow.com)"}
+
+
+async def _osm_search(q: str, country: str):
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=_OSM_HDR) as client:
+            r = await client.get("https://nominatim.openstreetmap.org/search",
+                                 params={"q": q, "countrycodes": country, "format": "json", "limit": 6, "addressdetails": 1})
+            items = r.json() or []
+    except Exception:
+        items = []
+    return {"status": "OK", "predictions": [{
+        "place_id": f"osm:{i['lat']},{i['lon']}", "description": i.get("display_name"),
+        "main_text": (i.get("display_name") or "").split(",")[0],
+        "secondary_text": ", ".join((i.get("display_name") or "").split(",")[1:4]).strip()} for i in items]}
+
+
+async def _osm_reverse(lat: float, lng: float):
+    addr, formatted = {}, None
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=_OSM_HDR) as client:
+            r = await client.get("https://nominatim.openstreetmap.org/reverse",
+                                 params={"lat": lat, "lon": lng, "format": "json", "zoom": 16, "addressdetails": 1})
+            data = r.json() or {}
+            addr, formatted = data.get("address") or {}, data.get("display_name")
+    except Exception:
+        pass
+    city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("state_district") or ""
+    return {"lat": lat, "lng": lng, "formatted": formatted or f"{lat:.4f}, {lng:.4f}",
+            "locality": addr.get("suburb") or addr.get("neighbourhood") or city or "Current location",
+            "city": city, "district": addr.get("state_district") or addr.get("county") or "",
+            "state": addr.get("state") or "", "pincode": addr.get("postcode") or "", "country": addr.get("country") or ""}

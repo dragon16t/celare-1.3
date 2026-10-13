@@ -7,9 +7,11 @@ import AdminServices from './AdminServices';
 import MpCategories from '../../components/admin/MpCategories';
 import MpSettings from '../../components/admin/MpSettings';
 import MpReviews from '../../components/admin/MpReviews';
+import MpCustomServices from '../../components/admin/MpCustomServices';
+import { Wand2 } from 'lucide-react';
 import { mp, adminHdr } from '../../utils/mpApi';
 
-const PlatformWallet = () => {
+export const PlatformWallet = () => {
   const [w, setW] = useState(null);
   useEffect(() => { mp.get('/admin/platform-wallet', adminHdr()).then((r) => setW(r.data)).catch(() => {}); }, []);
   if (!w) return <div className="text-stone-400 text-sm p-4">Loading…</div>;
@@ -18,14 +20,16 @@ const PlatformWallet = () => {
       <div className="bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-3xl p-6">
         <p className="text-xs uppercase tracking-widest opacity-80">Celesta Glow platform earnings</p>
         <p className="text-4xl font-extrabold mt-1">₹{w.balance.toFixed(2)}</p>
-        <p className="text-[11px] opacity-70 mt-1">Commissions + customer platform fees from completed bookings.</p>
+        <p className="text-[11px] opacity-70 mt-1">Provider commission + customer markup from completed bookings (doctors & partners).</p>
       </div>
       <div className="bg-white rounded-2xl border border-stone-200 p-4">
         <p className="font-bold text-stone-800 text-sm mb-2">Ledger</p>
         {w.ledger.length === 0 && <p className="text-xs text-stone-400">No earnings yet — entries appear after OTP-verified completions.</p>}
         {w.ledger.map((l) => (
           <div key={l.entry_id} className="flex justify-between text-xs py-2 border-b border-stone-50 last:border-0">
-            <span className="text-stone-600">{l.ref}{l.booking_id ? ` • ${l.booking_id}` : ''}<span className="block text-[10px] text-stone-400">{new Date(l.at).toLocaleString('en-IN')}</span></span>
+            <span className="text-stone-600">{l.ref}{l.booking_id ? ` • ${l.booking_id}` : ''}
+              {l.meta && <span className="block text-[10px] text-stone-500">Customer paid ₹{l.meta.customer_paid} • provider listed ₹{l.meta.listed_price} • commission {l.meta.commission_pct}% (₹{l.meta.commission}) • provider got ₹{l.meta.you_earn}</span>}
+              <span className="block text-[10px] text-stone-400">{new Date(l.at).toLocaleString('en-IN')}</span></span>
             <span className={`font-extrabold ${l.type === 'credit' ? 'text-emerald-700' : 'text-rose-600'}`}>{l.type === 'credit' ? '+' : '−'}₹{l.amount}</span>
           </div>
         ))}
@@ -37,6 +41,7 @@ const PlatformWallet = () => {
 const tabs = [
   ['partners', 'Partners & Applications', Users],
   ['services', 'Service Catalogue', Package],
+  ['custom', 'Partner-created Services', Wand2],
   ['bookings', 'Home Service Bookings', CalendarDays],
   ['categories', 'Categories & Images', LayoutGrid],
   ['reviews', 'Reviews', Star],
@@ -50,7 +55,7 @@ const AdminPartnerHub = () => {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto" data-testid="admin-partner-hub">
       <h1 className="text-2xl font-extrabold text-stone-900">Service Partner Manager</h1>
-      <p className="text-sm text-stone-500">Everything for the home services module — partners, catalogue, bookings, reviews, earnings, support and settings.</p>
+      <p className="text-sm text-stone-500">Partners, services, bookings, earnings and pricing.</p>
       <div className="flex gap-2 overflow-x-auto pb-2 mt-5 mb-6" data-testid="partner-hub-tabs">
         {tabs.map(([k, label, Icon]) => (
           <button key={k} onClick={() => setTab(k)} data-testid={`phub-${k}`}
@@ -61,6 +66,7 @@ const AdminPartnerHub = () => {
       </div>
       {tab === 'partners' && <AdminMpCRM kind="partners" />}
       {tab === 'services' && <AdminServices />}
+      {tab === 'custom' && <MpCustomServices />}
       {tab === 'bookings' && <AdminMpBookings fixedModule="home" />}
       {tab === 'categories' && <MpCategories module="service" />}
       {tab === 'reviews' && <MpReviews module="home" />}

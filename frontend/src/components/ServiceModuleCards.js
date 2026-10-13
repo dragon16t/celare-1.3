@@ -19,9 +19,12 @@ const ModuleSection = ({ module, title, subtitle, base, cats }) => (
   <section className="max-w-7xl mx-auto px-3 sm:px-6 pt-8 sm:pt-10" data-testid={`module-section-${module}`}>
     <div className="flex items-end justify-between mb-3 sm:mb-4 px-1 sm:px-0">
       <div>
-        <p className="text-[10px] sm:text-[11px] font-bold tracking-[0.35em] uppercase text-emerald-700 mb-1 flex items-center gap-2">
-          {module === 'doctor' ? <Stethoscope size={12} /> : <Sparkles size={12} />} {subtitle}
-        </p>
+        <span className="relative inline-flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 px-3 py-1 mb-2 shadow-md shadow-amber-500/20 ring-1 ring-amber-200" data-testid={`gold-badge-${module}`}>
+          <span className="absolute inset-y-0 w-8 bg-white/50 skew-x-[-20deg] animate-[shine_2.8s_ease-in-out_infinite]" />
+          {module === 'doctor' ? <Stethoscope size={12} className="text-stone-900" /> : <Sparkles size={12} className="text-stone-900" />}
+          <span className="relative text-[10px] sm:text-[11px] font-black tracking-[0.2em] uppercase text-stone-900">{subtitle}</span>
+        </span>
+        <style>{`@keyframes shine { 0% { left: -20%; } 60%, 100% { left: 120%; } }`}</style>
         <h2 className="text-xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">{title}</h2>
       </div>
       <Link to={base} data-testid={`module-viewall-${module}`}
@@ -59,11 +62,11 @@ const ServiceModuleCards = () => {
   return (
     <div data-testid="service-modules-section">
       {cfg.dermatologist_enabled && doctorCats.length > 0 && (
-        <ModuleSection module="doctor" title="Consult a Dermatologist" subtitle="Verified specialists online"
+        <ModuleSection module="doctor" title="What is your skin telling you?" subtitle="Online Consult"
           base="/doctors" cats={doctorCats} />
       )}
       {cfg.home_services_enabled && serviceCats.length > 0 && (
-        <ModuleSection module="service" title="Home Beauty & Wellness" subtitle="Professional care at home"
+        <ModuleSection module="service" title="Salon glow, without leaving home" subtitle="Health & Beauty at Home"
           base="/services" cats={serviceCats} />
       )}
     </div>

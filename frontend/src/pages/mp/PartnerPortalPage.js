@@ -3,6 +3,8 @@ import { Wallet, Inbox, CalendarDays, Sparkles, Bell, Navigation, MapPin } from 
 import { toast } from 'sonner';
 import { mp, partnerHdr, statusColor, fmtStatus } from '../../utils/mpApi';
 import { MpLogin } from './DoctorPortalPage';
+import WalletPanel from '../../components/mp/WalletPanel';
+import PartnerServicesPanel from '../../components/mp/PartnerServicesPanel';
 import PresenceToggle from '../../components/mp/PresenceToggle';
 
 const input = 'w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm';
@@ -96,10 +98,6 @@ const PartnerPortalPage = () => {
     const amt = Number(prompt('Amount to withdraw (₹):'));
     if (!amt) return;
     try { await mp.post('/partner/withdraw', { amount: amt }, partnerHdr()); toast.success('Withdrawal requested'); loadAll(); }
-    catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
-  };
-  const requestService = async (sid) => {
-    try { await mp.post('/partner/services/request', { service_id: sid }, partnerHdr()); toast.success('Requested — pending admin approval'); loadAll(); }
     catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
   };
 
@@ -197,7 +195,7 @@ const PartnerPortalPage = () => {
               <div key={b.booking_id} className="bg-white rounded-2xl border border-stone-200 p-4 flex items-center justify-between">
                 <div>
                   <p className="font-bold text-stone-900 text-sm">{b.service_name}</p>
-                  <p className="text-xs text-stone-500">{b.booking_id} • {b.date} • ₹{b.price}</p>
+                  <p className="text-xs text-stone-500">{b.booking_id} • {b.date} • listed ₹{b.price} · you earn ₹{b.provider_earning ?? b.price}</p>
                 </div>
                 <span className={`text-[11px] font-bold rounded-full px-2.5 py-1 ${statusColor(b.status)}`}>{fmtStatus(b.status)}</span>
               </div>
@@ -205,59 +203,9 @@ const PartnerPortalPage = () => {
           </div>
         )}
 
-        {tab === 'services' && services && (
-          <div className="space-y-5" data-testid="partner-services">
-            <div className="bg-white rounded-2xl border border-stone-200 p-5">
-              <p className="font-bold text-stone-800 text-sm mb-3">My services</p>
-              {services.mine.length === 0 && <p className="text-xs text-stone-400">None approved yet.</p>}
-              {services.mine.map((s) => (
-                <div key={s.service_id} className="flex justify-between items-center text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-700 font-semibold">{s.service_name} <span className="text-stone-400">• ₹{s.price} • {s.mode}</span></span>
-                  <span className={`font-bold rounded-full px-2 py-0.5 ${statusColor(s.approval_status)}`}>{s.approval_status}</span>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 p-5">
-              <p className="font-bold text-stone-800 text-sm mb-3">Add from catalogue</p>
-              {services.catalogue.filter((c) => !services.mine.find((m) => m.service_id === c.service_id)).map((c) => (
-                <div key={c.service_id} className="flex justify-between items-center text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-700">{c.name} <span className="text-stone-400">• ₹{c.price}{c.price_range?.max ? ` (₹${c.price_range.min}–${c.price_range.max})` : ''}</span></span>
-                  <button onClick={() => requestService(c.service_id)} data-testid={`req-svc-${c.service_id}`} className="text-emerald-700 font-bold underline">Request</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {tab === 'services' && services && <PartnerServicesPanel services={services} reload={loadAll} />}
 
-        {tab === 'wallet' && wallet && (
-          <div className="space-y-4" data-testid="partner-wallet">
-            <div className="bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-3xl p-6">
-              <p className="text-xs uppercase tracking-widest opacity-80">Available balance</p>
-              <p className="text-4xl font-extrabold mt-1">₹{wallet.balance.toFixed(2)}</p>
-              <button onClick={withdraw} data-testid="partner-withdraw" className="mt-4 bg-white text-emerald-900 text-xs font-extrabold rounded-full px-5 py-2.5">Request withdrawal</button>
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 p-4">
-              <p className="font-bold text-stone-800 text-sm mb-2">Ledger</p>
-              {wallet.ledger.length === 0 && <p className="text-xs text-stone-400">Earnings appear here after OTP-verified completions.</p>}
-              {wallet.ledger.map((l) => (
-                <div key={l.entry_id} className="flex justify-between text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-600">{l.ref}{l.booking_id ? ` • ${l.booking_id}` : ''}<span className="block text-[10px] text-stone-400">{new Date(l.at).toLocaleString('en-IN')}</span></span>
-                  <span className={`font-extrabold ${l.type === 'credit' ? 'text-emerald-700' : 'text-rose-600'}`}>{l.type === 'credit' ? '+' : '−'}₹{l.amount}</span>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 p-4">
-              <p className="font-bold text-stone-800 text-sm mb-2">Withdrawals</p>
-              {wallet.withdrawals.length === 0 && <p className="text-xs text-stone-400">None yet.</p>}
-              {wallet.withdrawals.map((w) => (
-                <div key={w.withdrawal_id} className="flex justify-between text-xs py-2 border-b border-stone-50 last:border-0">
-                  <span className="text-stone-600">{w.withdrawal_id}</span>
-                  <span className="font-bold">₹{w.amount} <span className={`ml-1 ${statusColor(w.status)} rounded-full px-2 py-0.5`}>{w.status}</span></span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {tab === 'wallet' && wallet && <WalletPanel wallet={wallet} onWithdraw={withdraw} testid="partner-wallet" />}
 
         {tab === 'notifications' && (
           <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-50" data-testid="partner-notifs">

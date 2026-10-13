@@ -9,6 +9,8 @@ import {
 // One unified nav list — single source of truth (used by both desktop sidebar AND mobile drawer).
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'green' },
+  { to: '/admin/dermatologists', label: 'Dermatologist Manager', icon: Stethoscope, color: 'emerald', featured: true },
+  { to: '/admin/partners', label: 'Service Partner Manager', icon: Users, color: 'cyan', featured: true },
   { to: '/admin/orders', label: 'Orders', icon: Package, color: 'amber' },
   { to: '/admin/warehouses', label: 'Warehouses', icon: Warehouse, color: 'emerald' },
   { to: '/admin/delivery-men', label: 'Delivery Men', icon: Users, color: 'emerald' },
@@ -28,8 +30,6 @@ const NAV_ITEMS = [
   { to: '/admin/retention', label: 'Retention', icon: Phone, color: 'cyan' },
   { to: '/admin/reviews', label: 'Reviews', icon: Star, color: 'amber' },
   { to: '/admin/consultations', label: 'Consultations', icon: Stethoscope, color: 'gray' },
-  { to: '/admin/dermatologists', label: 'Dermatologist Manager', icon: Stethoscope, color: 'emerald' },
-  { to: '/admin/partners', label: 'Partner Manager', icon: Users, color: 'cyan' },
   { to: '/admin/routines', label: 'Routine Reports', icon: Sparkles, color: 'pink' },
   { to: '/admin/customers', label: 'Customers', icon: Users, color: 'blue' },
   { to: '/admin/live-visitors', label: 'Live Visitors', icon: Activity, color: 'green' },
@@ -68,6 +68,36 @@ const activeClass = (c) => ({
   blue: 'bg-blue-50 text-blue-700',
   orange: 'bg-orange-50 text-orange-700',
 }[c] || 'bg-gray-100 text-gray-800');
+
+const OWN_SIDEBAR = ['/admin/dashboard', '/admin/retention', '/admin/routines', '/admin/settings'];
+
+export function AdminDesktopSidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  if (location.pathname === '/admin' || location.pathname === '/admin/' || OWN_SIDEBAR.includes(location.pathname)) return null;
+  return (
+    <>
+      <aside className="hidden lg:flex lg:flex-col fixed left-0 top-0 w-64 h-full bg-white border-r border-gray-200 z-40" data-testid="admin-desktop-sidebar">
+        <Link to="/admin/dashboard" className="p-6 block"><span className="text-xl font-bold text-green-600">Celesta Glow</span><span className="block text-sm text-gray-500">Admin Panel</span></Link>
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
+          {NAV_ITEMS.map((n) => {
+            const Icon = n.icon;
+            const active = location.pathname === n.to;
+            return (
+              <Link key={n.to} to={n.to} data-testid={`sidebar-${n.to.split('/').pop()}`}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm ${n.featured ? 'font-bold ring-1 ring-emerald-200 bg-emerald-50/60 ' : ''}${active ? activeClass(n.color) : colorClass(n.color)}`}>
+                <Icon size={18} /> {n.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <button onClick={() => { sessionStorage.removeItem('adminToken'); localStorage.removeItem('adminToken'); navigate('/admin'); }}
+          className="m-4 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-50" data-testid="sidebar-logout"><LogOut size={16} /> Sign out</button>
+      </aside>
+      <style>{`@media (min-width: 1024px) { [data-admin-content] { padding-left: 16rem; } }`}</style>
+    </>
+  );
+}
 
 export default function AdminMobileNav() {
   const [open, setOpen] = useState(false);

@@ -4,7 +4,7 @@ import { loadNicheBrands } from './utils/brand';
 import ScrollToTop from './components/ScrollToTop';
 import { TrackingProvider } from './providers/TrackingProvider';
 import PublicLayout from './layouts/PublicLayout';
-import AdminMobileNav from './components/admin/AdminMobileNav';
+import AdminMobileNav, { AdminDesktopSidebar } from './components/admin/AdminMobileNav';
 import SplashScreen from './components/SplashScreen';
 
 // Eagerly loaded pages (critical for first paint)
@@ -150,7 +150,8 @@ const AdminLayout = ({ children }) => {
   return (
     <Suspense fallback={<PageLoader />}>
       <AdminMobileNav />
-      {children}
+      <AdminDesktopSidebar />
+      <div data-admin-content="">{children}</div>
     </Suspense>
   );
 };

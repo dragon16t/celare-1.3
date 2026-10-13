@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 UPLOAD_DIR = ROOT / "uploads" / "mp"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-COMMISSION_DEFAULT = 20.0
+COMMISSION_DEFAULT = 15.0
 
 
 def setup(db, verify_admin_token, razorpay_client=None):
@@ -97,6 +97,7 @@ DEFAULT_CONFIG = {
     "home_services_enabled": True,
     "platform_commission_pct": COMMISSION_DEFAULT,
     "customer_fee_pct": 15.0,
+    "display_markup_pct": 30.0,
     "doctor_contact_policy": "hidden",  # hidden | after_booking | public
     "support_email": "support@celestaglow.com",
     "offer_expiry_minutes": 5,
@@ -109,6 +110,25 @@ async def cfg() -> Dict[str, Any]:
         doc = dict(DEFAULT_CONFIG)
         await _db.mp_config.insert_one(doc)
     return {**DEFAULT_CONFIG, **doc}
+
+
+def price_view(base: Any, c: Dict[str, Any]) -> Dict[str, Any]:
+    """Provider-listed base → customer price (markup baked in), struck MRP, provider/platform split."""
+    base = float(base or 0)
+    price = round(base * (1 + float(c.get("customer_fee_pct", 15)) / 100))
+    mrp = round(price * (1 + float(c.get("display_markup_pct", 30)) / 100))
+    earn = round(base * (1 - float(c.get("platform_commission_pct", 15)) / 100), 2)
+    return {"base": base, "price": price, "mrp": mrp,
+            "discount_pct": round((mrp - price) / mrp * 100) if mrp else 0,
+            "provider_earning": earn, "platform_earning": round(price - earn, 2)}
+
+
+async def migrate_pricing_v2():
+    doc = await _db.mp_config.find_one({"_id": "main"}) or {}
+    if not doc.get("pricing_v2"):
+        await _db.mp_config.update_one({"_id": "main"}, {"$set": {
+            "platform_commission_pct": 15.0, "customer_fee_pct": 15.0,
+            "display_markup_pct": 30.0, "pricing_v2": True}}, upsert=True)
 
 
 # ---------------------------------------------------------------- storage
@@ -192,7 +212,8 @@ async def wallet_balance(owner_type: str, owner_id: str) -> float:
     return float(w.get("balance", 0)) if w else 0.0
 
 
-async def wallet_move(owner_type: str, owner_id: str, amount: float, kind: str, ref: str, booking_id: str = "") -> Dict[str, Any]:
+async def wallet_move(owner_type: str, owner_id: str, amount: float, kind: str, ref: str, booking_id: str = "",
+                      meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Atomic ledger move. kind: credit|debit. Raises 400 on insufficient funds."""
     if amount <= 0:
         raise HTTPException(400, "Amount must be positive")
@@ -209,7 +230,7 @@ async def wallet_move(owner_type: str, owner_id: str, amount: float, kind: str, 
     entry = {
         "entry_id": uid("led"), "owner_type": owner_type, "owner_id": owner_id,
         "type": kind, "amount": amount, "balance_after": float(w.get("balance", 0)),
-        "ref": ref, "booking_id": booking_id, "at": now(),
+        "ref": ref, "booking_id": booking_id, "at": now(), **({"meta": meta} if meta else {}),
     }
     await _db.mp_wallet_ledger.insert_one(entry)
     return entry

@@ -52,6 +52,18 @@ const AdminMpCRM = ({ kind }) => {
     } catch (e) { toast.error(e.response?.data?.detail || 'Upload failed'); }
   };
 
+  const editFee = async (id, current) => {
+    const v = Number(window.prompt('New consultation fee set by doctor (₹) — customer price is calculated automatically:', current || ''));
+    if (!v) return;
+    try { await mp.put(`/admin/doctors/${id}/fee`, { fee: v }, adminHdr()); toast.success('Fee updated'); setDetail(null); load(); }
+    catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
+  };
+  const editSvcPrice = async (pid, sid, current) => {
+    const v = Number(window.prompt('New partner price (₹):', current || ''));
+    if (!v) return;
+    try { await mp.put(`/admin/partners/${pid}/services/${sid}/price`, { price: v }, adminHdr()); toast.success('Price updated'); setDetail(null); load(); }
+    catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
+  };
   const name = (x) => isDoctor ? x.personal?.name : (x.applicant?.business_name || x.applicant?.name);
   const sub = (x) => isDoctor
     ? `${x.professional?.qualification || ''} • Reg: ${x.professional?.registration_number || '—'} • ₹${x.consultation?.fee}`
@@ -76,6 +88,9 @@ const AdminMpCRM = ({ kind }) => {
             <div className="flex-1 min-w-0">
               <p className="font-bold text-stone-900 flex items-center gap-2 truncate">{name(x)} {x.application_status === 'approved' && <BadgeCheck size={15} className="text-emerald-600 shrink-0" />}</p>
               <p className="text-xs text-stone-500 truncate">{idOf(x)} • {sub(x)}</p>
+              <p className="text-xs text-stone-700 font-semibold truncate" data-testid={`crm-contact-${idOf(x)}`}>
+                {(isDoctor ? x.personal?.mobile : x.applicant?.mobile) || '—'} • {(isDoctor ? x.personal?.email : x.applicant?.email) || '—'}
+              </p>
             </div>
             <span className={`hidden sm:inline-block text-[11px] font-bold rounded-full px-2.5 py-1 ${statusColor(x.application_status)}`}>{fmtStatus(x.application_status)}</span>
             <button onClick={() => setDetail(x)} data-testid={`detail-${idOf(x)}`}
@@ -135,6 +150,7 @@ const AdminMpCRM = ({ kind }) => {
                   <Row label="Registration no." value={detail.professional?.registration_number} />
                   <Row label="Authority" value={detail.professional?.issuing_authority} />
                   <Row label="Fee" value={detail.consultation?.fee != null ? `₹${detail.consultation.fee} / ${detail.consultation?.duration_min || 20} min` : ''} />
+                  <button onClick={() => editFee(detail.doctor_id, detail.consultation?.fee)} data-testid="edit-doctor-fee" className="mb-2 text-xs font-bold text-emerald-700 underline">Edit fee</button>
                   <Row label="Languages" value={(detail.consultation?.languages || []).join(', ')} />
                   <Row label="Bio" value={detail.professional?.bio} />
                 </>
@@ -156,7 +172,8 @@ const AdminMpCRM = ({ kind }) => {
                   <p className="text-xs font-extrabold text-stone-700 mb-1.5">Requested services</p>
                   {detail.services.map((s) => (
                     <div key={s.service_id} className="flex items-center justify-between text-xs py-1.5 border-b border-stone-50">
-                      <span className="text-stone-700 font-semibold">{s.service_name} <span className="text-stone-400">• ₹{s.price} • {s.mode}</span></span>
+                      <span className="text-stone-700 font-semibold">{s.service_name} <span className="text-stone-400">• ₹{s.price} • {s.mode}</span>
+                        <button onClick={() => editSvcPrice(detail.partner_id, s.service_id, s.price)} data-testid={`edit-svc-price-${s.service_id}`} className="ml-2 text-emerald-700 underline">edit</button></span>
                       {s.approval_status === 'pending' ? (
                         <span className="flex gap-2">
                           <button onClick={() => svcDecision(detail.partner_id, s.service_id, 'approved')} className="text-emerald-700 font-bold">Approve</button>

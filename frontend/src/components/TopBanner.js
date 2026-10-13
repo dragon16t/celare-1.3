@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -8,6 +8,8 @@ const API = process.env.REACT_APP_BACKEND_URL;
 export default function TopBanner() {
   const [cfg, setCfg] = useState(null);
   const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touch = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -23,16 +25,29 @@ export default function TopBanner() {
   const count = slides.length;
 
   useEffect(() => {
-    if (count < 2) return undefined;
+    if (count < 2 || paused) return undefined;
     const t = setInterval(() => setIdx(i => (i + 1) % count), Math.max(1500, cfg?.autoplay_ms || 4000));
     return () => clearInterval(t);
-  }, [count, cfg?.autoplay_ms]);
+  }, [count, cfg?.autoplay_ms, paused, idx]);
+
+  const onTouchStart = (e) => { touch.current = { x: e.touches[0].clientX, moved: false }; setPaused(true); };
+  const onTouchMove = (e) => { if (touch.current) touch.current.dx = e.touches[0].clientX - touch.current.x; };
+  const onTouchEnd = (e) => {
+    const dx = touch.current?.dx || 0;
+    if (Math.abs(dx) > 40 && count > 1) {
+      e.preventDefault();
+      setIdx((i) => (dx < 0 ? (i + 1) % count : (i - 1 + count) % count));
+    }
+    touch.current = null;
+    setPaused(false);
+  };
 
   if (!cfg || !cfg.is_active || !count) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-3 sm:px-6 pt-2 sm:pt-3" data-testid="homepage-top-banner">
-      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-emerald-100 shadow-sm bg-white">
+      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-emerald-100 shadow-sm bg-white touch-pan-y"
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} data-testid="top-banner-track">
         <div className="flex items-center transition-transform duration-700 ease-out" style={{ transform: `translateX(-${idx * 100}%)` }}>
           {slides.map((s, i) => <BannerSlide key={i} slide={s} index={i} />)}
         </div>

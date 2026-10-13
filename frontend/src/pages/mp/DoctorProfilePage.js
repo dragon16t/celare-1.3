@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { BadgeCheck, Video, ArrowLeft, CheckCircle2, Zap, Clock } from 'lucide-react';
+import { BadgeCheck, Video, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { mp } from '../../utils/mpApi';
 import { openRazorpayCheckout } from '../../utils/razorpay';
 import InstantConsultModal from '../../components/mp/InstantConsultModal';
 import SEOHead from '../../components/SEOHead';
+import { PriceTag, DiscountBadge } from '../../components/mp/PriceTag';
+import { GoldBar } from './DoctorsPage';
 
 const next7Days = () => Array.from({ length: 7 }, (_, i) => {
   const d = new Date(); d.setDate(d.getDate() + i);
@@ -60,8 +62,7 @@ const DoctorProfilePage = () => {
           onFailure: (m) => { toast.error(m); setResult({ ...r.data, unpaid: true }); },
         });
       } else {
-        toast.success('Slot reserved!');
-        setResult(r.data);
+        setResult({ ...r.data, unpaid: true });
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Booking failed');
@@ -71,9 +72,8 @@ const DoctorProfilePage = () => {
   if (result) return (
     <div className="max-w-lg mx-auto px-6 py-20 text-center" data-testid="consult-booked">
       <CheckCircle2 size={56} className="mx-auto text-emerald-600" />
-      <h1 className="text-2xl font-extrabold text-stone-900 mt-4">{result.paid ? 'Payment done — consultation confirmed' : 'Consultation reserved'}</h1>
-      {result.unpaid && <p className="text-amber-700 text-sm mt-2 font-semibold">Payment wasn't completed — your slot is held briefly. Pay from My Bookings or contact support.</p>}
-      {result.message && !result.paid && <p className="text-stone-500 mt-2 text-sm">{result.message}</p>}
+      <h1 className="text-2xl font-extrabold text-stone-900 mt-4">{result.paid ? 'Paid — you are all set!' : 'Slot held — awaiting payment'}</h1>
+      {!result.paid && <p className="text-amber-700 text-sm mt-2 font-semibold" data-testid="prepaid-note">Consultations are prepaid. Your booking confirms the moment payment is received.</p>}
       <div className="mt-6 bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-left text-sm space-y-1.5">
         <p><b>Booking ID:</b> {result.booking.booking_id}</p>
         <p><b>Doctor:</b> Dr. {result.booking.doctor_name}</p>
@@ -82,7 +82,7 @@ const DoctorProfilePage = () => {
       </div>
       <div className="flex gap-3 justify-center mt-6">
         <button onClick={() => navigate('/my/bookings')} data-testid="goto-my-bookings" className="bg-emerald-700 text-white font-bold rounded-full px-6 py-3 text-sm">My Bookings</button>
-        <button onClick={() => navigate(`/consult-room/${result.booking.booking_id}`)} data-testid="goto-room" className="border border-emerald-700 text-emerald-800 font-bold rounded-full px-6 py-3 text-sm">Consultation Room</button>
+        {result.paid && <button onClick={() => navigate(`/consult-room/${result.booking.booking_id}`)} data-testid="goto-room" className="border border-emerald-700 text-emerald-800 font-bold rounded-full px-6 py-3 text-sm">Call doctor</button>}
       </div>
     </div>
   );
@@ -92,7 +92,7 @@ const DoctorProfilePage = () => {
       <SEOHead title={`Dr. ${doc.name} — Online Dermatologist`} canonicalPath={`/doctors/${doctorId}`}
         description={`Book a secure video consultation with Dr. ${doc.name} (${doc.qualification || 'Dermatologist'}) on Celesta Glow.`} />
       <div className="max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-8 overflow-x-hidden">
-        <Link to="/doctors" className="text-sm text-stone-500 flex items-center gap-1 mb-5"><ArrowLeft size={15} /> Dermatologists near you</Link>
+        <Link to="/doctors" className="text-sm text-stone-500 flex items-center gap-1 mb-5"><ArrowLeft size={15} /> All dermatologists</Link>
         <div className="grid md:grid-cols-5 gap-6 md:gap-8">
           <div className="md:col-span-2">
             <div className="bg-white rounded-3xl border border-stone-200 p-5 sm:p-6">
@@ -120,18 +120,18 @@ const DoctorProfilePage = () => {
           <div className="md:col-span-3 min-w-0">
             {doc.online && (
               availableNow ? (
-                <button onClick={() => setShowInstant(true)} data-testid="profile-consult-now"
-                  className="w-full mb-4 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-extrabold rounded-2xl py-4 text-sm shadow-lg shadow-emerald-700/20">
-                  <Zap size={16} /> Doctor available for instant booking — pay & connect now
-                </button>
+                <div className="mb-4"><GoldBar onlineCount={1} onClick={() => setShowInstant(true)} testid="profile-consult-now" /></div>
               ) : (
                 <div className="w-full mb-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl py-3.5 px-4 text-xs font-bold flex items-center gap-2" data-testid="doctor-engaged">
-                  <Clock size={15} /> Doctor is in a consultation right now — average consultation ~30 min. Schedule a slot below.
+                  <Clock size={15} /> In a consultation now (~30 min) — grab a slot below.
                 </div>
               )
             )}
             {showInstant && <InstantConsultModal doctorId={doctorId} onClose={() => setShowInstant(false)} />}
-            <h2 className="text-lg font-extrabold text-stone-900 mb-3">Schedule a slot <span className="text-emerald-700">— ₹{doc.fee}</span></h2>
+            <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+              <h2 className="text-lg font-extrabold text-stone-900">Pick your slot</h2>
+              <span className="flex items-center gap-2"><PriceTag price={doc.fee} mrp={doc.mrp} /><DiscountBadge pct={doc.discount_pct} /></span>
+            </div>
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" data-testid="date-picker">
               {days.map((d) => (
                 <button key={d.iso} data-testid={`date-${d.iso}`} onClick={() => { setDate(d.iso); setSlot(''); }}
@@ -162,9 +162,9 @@ const DoctorProfilePage = () => {
                 className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm" />
               <button disabled={busy || !slot} data-testid="book-submit"
                 className="w-full bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-extrabold rounded-full py-3.5 text-sm">
-                {busy ? 'Reserving…' : slot ? `Pay ₹${doc.fee} & book — ${date} • ${slot}` : 'Select a slot to continue'}
+                {busy ? 'Processing…' : slot ? `Pay ₹${doc.fee} & book — ${date} • ${slot}` : 'Select a slot to continue'}
               </button>
-              <p className="text-[11px] text-stone-400 text-center">Secure Razorpay payment. The doctor's personal number is never shared — you meet in the video room. After the consult, your Rx prescription appears in My Bookings.</p>
+              <p className="text-[11px] text-stone-400 text-center">Prepaid & secure · private video call · e-prescription after the call</p>
             </form>
           </div>
         </div>
