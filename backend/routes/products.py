@@ -180,34 +180,49 @@ class TopBannerPatch(BaseModel):
     image_mobile: Optional[str] = None
     link_url: Optional[str] = None
     is_active: Optional[bool] = None
+    slides: Optional[List[Dict[str, str]]] = None
+    autoplay_ms: Optional[int] = None
+
+
+def _top_banner_admin_view(doc: dict) -> dict:
+    return {
+        "image_desktop": doc.get("image_desktop") or "",
+        "image_mobile": doc.get("image_mobile") or "",
+        "link_url": doc.get("link_url") or "/shop?niche=anti-aging",
+        "is_active": bool(doc.get("is_active", True)),
+        "slides": [s for s in (doc.get("slides") or []) if s.get("image_desktop") or s.get("image_mobile")],
+        "autoplay_ms": int(doc.get("autoplay_ms") or 4000),
+    }
 
 
 @router.get("/top-banner")
 async def public_top_banner(response: Response):
-    """Public: get the homepage top banner (image + click destination)."""
+    """Public: get the homepage top banner slides (images + click destinations)."""
     response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
     doc = await db.admin_settings.find_one({"type": "top_banner"}, {"_id": 0}) or {}
     from services.image_optimizer import optimize_cloudinary_url as _opt
-    desktop = doc.get("image_desktop") or ""
-    mobile = doc.get("image_mobile") or desktop
-    return {
-        "image_desktop": _opt(desktop, 1600) if desktop else "",
-        "image_mobile": _opt(mobile, 1200) if mobile else "",
-        "link_url": doc.get("link_url") or "/shop?niche=anti-aging",
-        "is_active": bool(doc.get("is_active", True)),
-    }
+    cfg = _top_banner_admin_view(doc)
+    raw = [{"image_desktop": cfg["image_desktop"], "image_mobile": cfg["image_mobile"], "link_url": cfg["link_url"]}] + cfg["slides"]
+    slides = []
+    for s in raw:
+        desktop = s.get("image_desktop") or s.get("image_mobile") or ""
+        mobile = s.get("image_mobile") or desktop
+        if not desktop:
+            continue
+        slides.append({
+            "image_desktop": _opt(desktop, 1600),
+            "image_mobile": _opt(mobile, 1200),
+            "link_url": s.get("link_url") or cfg["link_url"],
+        })
+    first = slides[0] if slides else {"image_desktop": "", "image_mobile": "", "link_url": cfg["link_url"]}
+    return {**first, "is_active": cfg["is_active"], "slides": slides, "autoplay_ms": cfg["autoplay_ms"]}
 
 
 @router.get("/admin/top-banner")
 async def admin_get_top_banner(x_admin_token: str = Header(None, alias="X-Admin-Token")):
     verify_auth(x_admin_token=x_admin_token)
     doc = await db.admin_settings.find_one({"type": "top_banner"}, {"_id": 0}) or {}
-    return {
-        "image_desktop": doc.get("image_desktop") or "",
-        "image_mobile": doc.get("image_mobile") or "",
-        "link_url": doc.get("link_url") or "/shop?niche=anti-aging",
-        "is_active": bool(doc.get("is_active", True)),
-    }
+    return _top_banner_admin_view(doc)
 
 
 @router.put("/admin/top-banner")
@@ -220,12 +235,7 @@ async def admin_update_top_banner(payload: TopBannerPatch, x_admin_token: str = 
     upd["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.admin_settings.update_one({"type": "top_banner"}, {"$set": upd}, upsert=True)
     doc = await db.admin_settings.find_one({"type": "top_banner"}, {"_id": 0}) or {}
-    return {
-        "image_desktop": doc.get("image_desktop") or "",
-        "image_mobile": doc.get("image_mobile") or "",
-        "link_url": doc.get("link_url") or "/shop?niche=anti-aging",
-        "is_active": bool(doc.get("is_active", True)),
-    }
+    return _top_banner_admin_view(doc)
 
 def _apply_sale_one(p: dict, cfg: dict):
     """Mutate a product/combo dict in-place: add sale_active + discounted

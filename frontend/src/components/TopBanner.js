@@ -4,13 +4,10 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-/**
- * TopBanner — admin-editable hero image at the very top of the homepage.
- * Fetches its own config from /api/top-banner (independent of niche hero).
- * Renders nothing if unset or disabled by admin.
- */
+// Admin-editable top-of-homepage banner; auto-slides when multiple images exist.
 export default function TopBanner() {
   const [cfg, setCfg] = useState(null);
+  const [idx, setIdx] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -20,36 +17,62 @@ export default function TopBanner() {
     return () => { mounted = false; };
   }, []);
 
-  if (!cfg || !cfg.is_active || !(cfg.image_desktop || cfg.image_mobile)) return null;
+  const slides = (cfg?.slides && cfg.slides.length)
+    ? cfg.slides
+    : (cfg && (cfg.image_desktop || cfg.image_mobile) ? [cfg] : []);
+  const count = slides.length;
 
-  const to = cfg.link_url || '/shop?niche=anti-aging';
+  useEffect(() => {
+    if (count < 2) return undefined;
+    const t = setInterval(() => setIdx(i => (i + 1) % count), Math.max(1500, cfg?.autoplay_ms || 4000));
+    return () => clearInterval(t);
+  }, [count, cfg?.autoplay_ms]);
+
+  if (!cfg || !cfg.is_active || !count) return null;
+
+  return (
+    <section className="max-w-7xl mx-auto px-3 sm:px-6 pt-2 sm:pt-3" data-testid="homepage-top-banner">
+      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-emerald-100 shadow-sm bg-white">
+        <div className="flex items-center transition-transform duration-700 ease-out" style={{ transform: `translateX(-${idx * 100}%)` }}>
+          {slides.map((s, i) => <BannerSlide key={i} slide={s} index={i} />)}
+        </div>
+        {count > 1 && (
+          <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5" data-testid="top-banner-dots">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => setIdx(i)}
+                data-testid={`top-banner-dot-${i}`}
+                className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${i === idx ? 'w-5 bg-emerald-600' : 'w-1.5 bg-white/80 ring-1 ring-stone-300'}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function BannerSlide({ slide, index }) {
+  const to = slide.link_url || '/shop?niche=anti-aging';
   const external = /^https?:\/\//.test(to);
-
-  const inner = (
+  const img = (
     <picture>
-      {cfg.image_mobile && <source media="(max-width: 640px)" srcSet={cfg.image_mobile} />}
+      {slide.image_mobile && <source media="(max-width: 640px)" srcSet={slide.image_mobile} />}
       <img
-        src={cfg.image_desktop || cfg.image_mobile}
-        alt="Celesta Glow Anti-Aging — shop the collection"
-        loading="eager"
-        fetchPriority="high"
+        src={slide.image_desktop || slide.image_mobile}
+        alt="Celesta Glow — shop the collection"
+        loading={index === 0 ? 'eager' : 'lazy'}
+        fetchPriority={index === 0 ? 'high' : 'auto'}
         decoding="async"
         className="w-full h-auto block object-cover"
       />
     </picture>
   );
-
-  return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-6 pt-2 sm:pt-3" data-testid="homepage-top-banner">
-      {external ? (
-        <a href={to} target="_blank" rel="noopener noreferrer" className="block rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-emerald-100 shadow-sm hover:shadow-md transition-shadow bg-white">
-          {inner}
-        </a>
-      ) : (
-        <Link to={to} className="block rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-emerald-100 shadow-sm hover:shadow-md transition-shadow bg-white">
-          {inner}
-        </Link>
-      )}
-    </section>
-  );
+  const cls = 'block w-full shrink-0';
+  return external
+    ? <a href={to} target="_blank" rel="noopener noreferrer" className={cls} data-testid={`top-banner-slide-${index}`}>{img}</a>
+    : <Link to={to} className={cls} data-testid={`top-banner-slide-${index}`}>{img}</Link>;
 }

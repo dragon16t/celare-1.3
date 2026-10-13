@@ -1015,7 +1015,14 @@ function TopBannerManager({ auth }) {
       fd.append('file', file);
       fd.append('folder', 'top-banner');
       const r = await axios.post(`${API}/api/admin/upload-image`, fd, auth);
-      setCfg(prev => ({ ...prev, [field === 'desktop' ? 'image_desktop' : 'image_mobile']: r.data.url || r.data.secure_url || '' }));
+      const url = r.data.url || r.data.secure_url || '';
+      const m = /^slide-(\d+)-(desktop|mobile)$/.exec(field);
+      if (m) {
+        const i = Number(m[1]);
+        setCfg(prev => ({ ...prev, slides: (prev.slides || []).map((s, j) => (j === i ? { ...s, [`image_${m[2]}`]: url } : s)) }));
+      } else {
+        setCfg(prev => ({ ...prev, [field === 'desktop' ? 'image_desktop' : 'image_mobile']: url }));
+      }
     } catch (e) {
       alert('Upload failed: ' + (e.response?.data?.detail || e.message));
     } finally { setUploading(null); }
@@ -1081,6 +1088,8 @@ function TopBannerManager({ auth }) {
         <p className="mt-1 text-[10px] text-stone-400">Where the banner sends tappers. Use a full https:// URL for external sites.</p>
       </label>
 
+      <TbSlidesEditor cfg={cfg} setCfg={setCfg} uploading={uploading} uploadFile={uploadFile} />
+
       <label className="inline-flex items-center gap-2 mb-6 cursor-pointer" data-testid="topbanner-active-label">
         <input
           type="checkbox"
@@ -1103,6 +1112,68 @@ function TopBannerManager({ auth }) {
           {saved ? 'Saved!' : (busy ? 'Saving…' : 'Save Banner')}
         </button>
       </div>
+    </div>
+  );
+}
+
+function TbSlidesEditor({ cfg, setCfg, uploading, uploadFile }) {
+  const slides = cfg.slides || [];
+  const update = (fn) => setCfg(p => ({ ...p, slides: fn(p.slides || []) }));
+  const move = (i, d) => update(s => {
+    const n = [...s]; const j = i + d;
+    if (j < 0 || j >= n.length) return n;
+    [n[i], n[j]] = [n[j], n[i]]; return n;
+  });
+  return (
+    <div className="mb-5 rounded-xl ring-1 ring-stone-200 p-4 bg-stone-50/60" data-testid="topbanner-slides-editor">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <span className="text-xs font-bold text-stone-700 uppercase tracking-wide">Slider — additional images ({slides.length})</span>
+        <label className="flex items-center gap-2 text-xs text-stone-600">
+          Slide every
+          <input
+            type="number" min={1.5} step={0.5}
+            value={(cfg.autoplay_ms || 4000) / 1000}
+            onChange={(e) => setCfg(p => ({ ...p, autoplay_ms: Math.round(Number(e.target.value || 4) * 1000) }))}
+            className="w-16 px-2 py-1 rounded-md border border-stone-200 text-sm"
+            data-testid="topbanner-autoplay"
+          />
+          sec
+        </label>
+      </div>
+      <p className="text-[10px] text-stone-400 mb-3">The image above is slide 1. Add more images here — they slide one after another on the homepage.</p>
+      <div className="space-y-4">
+        {slides.map((s, i) => (
+          <div key={i} className="bg-white rounded-xl ring-1 ring-stone-200 p-3" data-testid={`topbanner-slide-${i}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black text-stone-800">Slide {i + 2}</span>
+              <div className="flex gap-1">
+                <button type="button" onClick={() => move(i, -1)} className="text-xs px-2 py-1 rounded-md ring-1 ring-stone-200 hover:bg-stone-100" data-testid={`topbanner-slide-${i}-up`}>↑</button>
+                <button type="button" onClick={() => move(i, 1)} className="text-xs px-2 py-1 rounded-md ring-1 ring-stone-200 hover:bg-stone-100" data-testid={`topbanner-slide-${i}-down`}>↓</button>
+                <button type="button" onClick={() => update(a => a.filter((_, j) => j !== i))} className="text-xs px-2 py-1 rounded-md ring-1 ring-red-200 text-red-600 hover:bg-red-50" data-testid={`topbanner-slide-${i}-remove`}>Remove</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+              <TbFileField label="Desktop image" value={s.image_desktop} uploading={uploading === `slide-${i}-desktop`} onFile={(f) => uploadFile(`slide-${i}-desktop`, f)} onClear={() => update(a => a.map((x, j) => (j === i ? { ...x, image_desktop: '' } : x)))} testId={`topbanner-slide-${i}-desktop`} />
+              <TbFileField label="Mobile image (optional)" value={s.image_mobile} uploading={uploading === `slide-${i}-mobile`} onFile={(f) => uploadFile(`slide-${i}-mobile`, f)} onClear={() => update(a => a.map((x, j) => (j === i ? { ...x, image_mobile: '' } : x)))} testId={`topbanner-slide-${i}-mobile`} />
+            </div>
+            <input
+              value={s.link_url || ''}
+              onChange={(e) => update(a => a.map((x, j) => (j === i ? { ...x, link_url: e.target.value } : x)))}
+              placeholder="Click destination (defaults to main link)"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200"
+              data-testid={`topbanner-slide-${i}-link`}
+            />
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => update(a => [...a, { image_desktop: '', image_mobile: '', link_url: '' }])}
+        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full ring-1 ring-emerald-300 text-emerald-700 hover:bg-emerald-50"
+        data-testid="topbanner-add-slide"
+      >
+        <Upload size={12} /> Add slide
+      </button>
     </div>
   );
 }

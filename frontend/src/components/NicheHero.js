@@ -36,18 +36,18 @@ export default function NicheHero({
   const mobileImg = mobileBgImage || bgImage;
   return (
     <section className="px-3 sm:px-6 pt-3 sm:pt-6" data-testid={testId}>
-      <div className="max-w-7xl mx-auto relative overflow-hidden rounded-2xl sm:rounded-3xl ring-1 ring-stone-200/70 shadow-sm bg-stone-100">
+      <div className="max-w-7xl mx-auto relative overflow-hidden rounded-2xl sm:rounded-3xl ring-1 ring-stone-200/70 shadow-sm sm:bg-stone-100">
         {/* Background banner artwork — separate <img> for mobile vs desktop.
             Mobile gets a proper min-height + centered crop so the banner is
             never awkwardly cut/squished on small screens. */}
         <picture>
           <source media="(min-width: 640px)" srcSet={cldOptim(bgImage, { w: 1600 })} />
-          <img src={cldOptim(mobileImg, { w: 1200 })} alt="" loading="eager" fetchpriority="high" decoding="async" aria-hidden className="absolute inset-0 w-full h-full object-cover object-center sm:object-right" />
+          <img src={cldOptim(mobileImg, { w: 1200 })} alt="" loading="eager" fetchpriority="high" decoding="async" aria-hidden className="relative block sm:absolute sm:inset-0 w-full h-auto sm:h-full object-contain sm:object-cover object-center sm:object-right" />
         </picture>
 
         {/* Left-fading legibility overlay */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="hidden sm:block absolute inset-0 pointer-events-none"
           style={{
             background:
               'linear-gradient(90deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.62) 30%, rgba(255,255,255,0.22) 56%, rgba(255,255,255,0) 75%)',
@@ -55,8 +55,8 @@ export default function NicheHero({
         />
 
         {/* Content overlay */}
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-12">
-          <div className="col-span-7 px-4 py-5 sm:px-8 sm:pt-12 sm:pb-6 lg:px-12 lg:pt-16 lg:pb-8 max-w-[680px] min-h-[380px] sm:min-h-0 flex flex-col justify-end">
+        <div className="absolute inset-0 sm:relative z-10 grid grid-cols-1 sm:grid-cols-12">
+          <div className="col-span-7 px-4 py-5 sm:px-8 sm:pt-12 sm:pb-6 lg:px-12 lg:pt-16 lg:pb-8 max-w-[680px] h-full sm:h-auto flex flex-col justify-end">
             {eyebrow && (
               <div className="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur ring-1 ring-stone-200 px-2.5 py-1 rounded-full mb-2 sm:mb-4 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: eyebrowDot }} />
