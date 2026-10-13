@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- Pinterest domain verification (Feb-2026) -->
+        <meta name="p:domain_verify" content="932ef79d89721ec0b913511dbea52c73"/>
+
+        <!-- Google Analytics 4 -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-QYDN365M5N"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-QYDN365M5N');
+        </script>
+
+        <!-- Microsoft Clarity (session replay + heatmaps) -->
+        <script type="text/javascript">
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "wwzgn2zlj7");
+        </script>
+        
+        <!-- Preconnect to image CDNs for faster banner loading -->
+        <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+        <link rel="preconnect" href="https://images.pexels.com" crossorigin />
+        <link rel="preconnect" href="https://customer-assets.emergentagent.com" crossorigin />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.pexels.com" />
+        <link rel="dns-prefetch" href="https://customer-assets.emergentagent.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+        <!-- Feb-2026: pre-warm the top-5 anti-aging products so the very
+             first paint on production shows real product tiles instead of
+             skeletons. Runs during HTML parse, before the JS bundle boots. -->
+        <script>
+          (function () {
+            try {
+              var origin = window.location.origin;
+              var url = origin + '/api/products?niche=anti-aging&page=1&limit=5';
+              // Kick off the fetch and stash the promise on window so the
+              // React homepage can await it instead of firing its own.
+              window.__cgTopProductsPromise = fetch(url, { credentials: 'omit' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .catch(function () { return null; });
+            } catch (e) { /* best-effort */ }
+          })();
+        </script>
+
+        <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+
+        <!-- Favicon -->
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
+        
+        <!-- Meta Pixel Code - MUST BE FIRST for Landing Page Views tracking -->
+        <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!1;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '690863659974240');
+        fbq('track', 'PageView');
+        </script>
+        <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=690863659974240&ev=PageView&noscript=1"
+        /></noscript>
+        <!-- End Meta Pixel Code -->
+        
+        <!-- Backup: Direct pixel image for Landing Page View -->
+        <img height="1" width="1" style="display:none" 
+        src="https://www.facebook.com/tr?id=690863659974240&ev=PageView&noscript=1" 
+        loading="eager" fetchpriority="high" />
+        
+        <!-- Google Ads (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16928253164"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'AW-16928253164');
+        </script>
+        <!-- End Google Ads -->
+        
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="description" content="Shop dermatologist-recommended vegan skin care products in Kerala, including face serums, cleansers, sunscreen, and moisturizers. Buy now!" />
+        <meta name="keywords" content="anti aging products kerala, retinol serum kerala, best skincare brand kerala, anti aging cream india, celesta glow, dermatologist approved skincare, cosmetics online kerala, skincare kochi, ernakulam, thiruvananthapuram, kozhikode, thrissur, malappuram, kollam, palakkad, kannur, vitamin c serum india, peptide serum kerala" />
+        <meta name="author" content="Veegal Enterprises LLP" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+        <!-- Canonical URL -->
+        <link rel="canonical" href="https://celestaglow.com/" />
+        <!-- hreflang for Indian English audience -->
+        <link rel="alternate" hreflang="en-in" href="https://celestaglow.com/" />
+        <link rel="alternate" hreflang="x-default" href="https://celestaglow.com/" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://celestaglow.com/" />
+        <meta property="og:title" content="Dermatologist Recommended Skin Care Brand | Celesta Glow" />
+        <meta property="og:description" content="Shop dermatologist-recommended vegan skin care products in Kerala, including face serums, cleansers, sunscreen, and moisturizers. Buy now!" />
+        <meta property="og:image" content="https://customer-assets.emergentagent.com/job_3e020a22-98fc-4fee-b377-5bacdddf46ce/artifacts/ig243hne_IMG_9115.png" />
+        <meta property="og:site_name" content="Celesta Glow" />
+        <meta property="og:locale" content="en_IN" />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://celestaglow.com/" />
+        <meta property="twitter:title" content="Celesta Glow – Kerala's Trusted Anti-Aging Skincare Brand" />
+        <meta property="twitter:description" content="Clinical anti-aging serums made for Indian skin. Free shipping across Kerala. 7-day sealed-bottle return." />
+        <meta property="twitter:image" content="https://customer-assets.emergentagent.com/job_3e020a22-98fc-4fee-b377-5bacdddf46ce/artifacts/ig243hne_IMG_9115.png" />
+
+        <!-- Structured Data — Organization -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Celesta Glow",
+          "legalName": "Veegal Enterprises LLP",
+          "url": "https://celestaglow.com",
+          "logo": "https://celestaglow.com/logo192.png",
+          "description": "India's #1 complete anti-aging skincare brand. Dermatologist-approved formulas for Indian skin.",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+91-94461-25745",
+            "contactType": "customer service",
+            "areaServed": "IN",
+            "availableLanguage": ["en", "hi"]
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "1st Floor, 38, Booth No. 62, Ashwini Layout, 2nd Main, Egipura",
+            "addressLocality": "Bengaluru",
+            "addressRegion": "Karnataka",
+            "postalCode": "560047",
+            "addressCountry": "IN"
+          },
+          "sameAs": [
+            "https://wa.me/919446125745"
+          ]
+        }
+        </script>
+
+        <!-- Structured Data — WebSite with SiteSearch -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Celesta Glow",
+          "url": "https://celestaglow.com",
+          "inLanguage": "en-IN",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://celestaglow.com/shop?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+        </script>
+
+        <!-- Structured Data — Homepage FAQ -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What products does Celesta Glow sell?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Celesta Glow is an Indian skincare and cosmetics brand. Our anti-aging range includes a Face Serum (Retinol + Niacinamide + Hyaluronic Acid), Night Cream, Under Eye Cream, Sunscreen and Cleanser — all clinically formulated and dermatologist approved for Indian skin."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How long does Celesta Glow serum take to show results?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Most users see visible improvement in skin texture and hydration within 1-2 weeks. Noticeable reduction in fine lines and wrinkles typically occurs after 4-6 weeks of consistent daily use."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is Celesta Glow safe for Indian skin and climate?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Every Celesta Glow formula is built specifically for Indian skin types and climate — high humidity, sun exposure and pollution. All products are dermatologist approved and free of harsh chemicals."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the return policy?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We accept 7-day returns on unopened, factory-sealed items only. For hygiene reasons, opened or used bottles cannot be returned or refunded. Damaged-on-arrival and wrong-item shipments are always covered."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Celesta Glow ship across India?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Celesta Glow ships free across all of India and offers both prepaid and Cash on Delivery (COD) payment options."
+              }
+            }
+          ]
+        }
+        </script>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Async font load via preload+swap. The previous synchronous link
+             blocked first paint by 200-400 ms on slow 4G. -->
+        <link rel="preload" as="style"
+              href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Cormorant+Garamond:wght@400;500;600&display=swap"
+              onload="this.onload=null;this.rel='stylesheet'" />
+        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Cormorant+Garamond:wght@400;500;600&display=swap" /></noscript>
+
+        <!-- Razorpay Checkout — ONLY loaded on /checkout via CheckoutPage.js.
+             Inlining it in index.html added ~180 KB of blocking JS to every
+             page, including the homepage (TBT contributor on the Jun 22 2026
+             PageSpeed report). The CheckoutPage now imports it on demand. -->
+
+        <title>Dermatologist Recommended Skin Care Brand | Celesta Glow</title>
+        
+        <!-- ViewContent auto-tracking for product pages -->
+        <script>
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            var path = window.location.pathname;
+            if (path.includes('/product') || path === '/' || path.includes('/anti-aging')) {
+              if (typeof fbq === 'function') {
+                fbq('track', 'ViewContent', {
+                  content_name: 'Super Anti-Aging Serum',
+                  content_category: 'Skincare',
+                  content_ids: ['celestaglow_serum_001'],
+                  content_type: 'product',
+                  value: 699.00,
+                  currency: 'INR'
+                });
+              }
+            }
+          }, 1000);
+        });
+        </script>
+        <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
+        <script defer src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+    </head>
+    <body>
+        <noscript>
+            <div style="max-width:800px;margin:40px auto;padding:24px;font-family:system-ui,Arial,sans-serif;color:#1a1a1a;line-height:1.6;">
+                <h1 style="font-size:28px;margin:0 0 8px;">Celesta Glow — India's #1 Anti-Aging Skincare Brand</h1>
+                <p style="font-size:16px;color:#555;margin:0 0 24px;">Dermatologist-approved anti-aging, skincare and cosmetics built for Indian skin. Free shipping across India. 7-day sealed-bottle return.</p>
+                <h2 style="font-size:20px;margin:24px 0 8px;">Our complete anti-aging system</h2>
+                <ul>
+                    <li><strong>Anti-Aging Face Serum</strong> — Retinol + Niacinamide + Hyaluronic Acid. Visibly reduces fine lines in 4-6 weeks.</li>
+                    <li><strong>Anti-Aging Night Cream</strong> — overnight peptide repair for firmer, smoother skin.</li>
+                    <li><strong>Under Eye Cream</strong> — targets dark circles, puffiness and fine lines.</li>
+                    <li><strong>Anti-Aging Sunscreen SPF</strong> — lightweight daily UV protection formulated for Indian climate.</li>
+                    <li><strong>Gentle Cleanser</strong> — sulfate-free first step that preps skin for serum absorption.</li>
+                </ul>
+                <h2 style="font-size:20px;margin:24px 0 8px;">Why customers choose us</h2>
+                <ul>
+                    <li>Trusted by 50,000+ Indians.</li>
+                    <li>Made by Veegal Enterprises LLP, Bengaluru.</li>
+                    <li>Free shipping. Cash on Delivery available across India.</li>
+                    <li>7-day sealed-bottle return — opened products are non-returnable for hygiene reasons.</li>
+                </ul>
+                <h2 style="font-size:20px;margin:24px 0 8px;">Contact</h2>
+                <p>WhatsApp / Phone: <a href="tel:+919446125745">+91-94461-25745</a> · Email: <a href="mailto:support@celestaglow.com">support@celestaglow.com</a></p>
+                <p style="margin-top:24px;color:#888;font-size:14px;">This site uses JavaScript for interactive features. For the full shopping experience please enable JavaScript.</p>
+            </div>
+        </noscript>
+        <div id="root"></div>
+        <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+                <script>
+            !(function (t, e) {
+                var o, n, p, r;
+                e.__SV ||
+                    ((window.posthog = e),
+                    (e._i = []),
+                    (e.init = function (i, s, a) {
+                        function g(t, e) {
+                            var o = e.split(".");
+                            2 == o.length && ((t = t[o[0]]), (e = o[1])),
+                                (t[e] = function () {
+                                    t.push(
+                                        [e].concat(
+                                            Array.prototype.slice.call(
+                                                arguments,
+                                                0,
+                                            ),
+                                        ),
+                                    );
+                                });
+                        }
+                        ((p = t.createElement("script")).type =
+                            "text/javascript"),
+                            (p.crossOrigin = "anonymous"),
+                            (p.async = !0),
+                            (p.src =
+                                s.api_host.replace(
+                                    ".i.posthog.com",
+                                    "-assets.i.posthog.com",
+                                ) + "/static/array.js"),
+                            (r =
+                                t.getElementsByTagName(
+                                    "script",
+                                )[0]).parentNode.insertBefore(p, r);
+                        var u = e;
+                        for (
+                            void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
+                                u.people = u.people || [],
+                                u.toString = function (t) {
+                                    var e = "posthog";
+                                    return (
+                                        "posthog" !== a && (e += "." + a),
+                                        t || (e += " (stub)"),
+                                        e
+                                    );
+                                },
+                                u.people.toString = function () {
+                                    return u.toString(1) + ".people (stub)";
+                                },
+                                o =
+                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
+                                        " ",
+                                    ),
+                                n = 0;
+                            n < o.length;
+                            n++
+                        )
+                            g(u, o[n]);
+                        e._i.push([i, s, a]);
+                    }),
+                    (e.__SV = 1));
+            })(document, window.posthog || []);
+            posthog.init("phc_xAvL2Iq4tFmANRE7kzbKwaSqp1HJjN7x48s3vr0CMjs", {
+                api_host: "https://us.i.posthog.com",
+                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well,
+                session_recording: {
+                    recordCrossOriginIframes: true,
+                    capturePerformance: false,
+                },
+            });
+        </script>
+    </body>
+</html>

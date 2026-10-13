@@ -1,0 +1,790 @@
+{
+ "products": [
+  {
+   "slug": "anti-aging-serum",
+   "name": "Celesta Glow Gentle Cleanser",
+   "short_name": "Gentle Cleanser",
+   "tagline": "Cleanse Deep. Age Slow. Glow Daily",
+   "description": "A mild, pH-balanced daily cleanser designed to remove dirt, excess oil, and impurities without disrupting the skin barrier. It helps refine skin texture, improve clarity, and support a smoother, youthful-looking complexion",
+   "category": "cleansers",
+   "key_ingredients": "Niacinamide, Salicylic Acid, Pea Protein",
+   "ingredients_full": "Aqua, Stearic Acid, Sodium Laureth Sulfate, Coco Fatty, Potassium Hydroxide, Sorbitol, Lauric Acid, Aloe Vera Leaf Extract, Cocamide MEA, Myristic Acid, Sodium Lactate, Sodium Gluconate, Palmitic Acid, Propylene Glycol, Salicylic Acid, Pea Protein (Pisum Sativum) Enzymatically Hydrolyzed, Phenoxyethanol, Ethylhexylglycerin, Stevioside, Tea Tree Oil, Fragrance, Sodium Gluconate*, Clove Oil",
+   "benefits": [
+    "Apply to damp skin",
+    "Massage gently in circular motions",
+    "Rinse thoroughly with water",
+    "Use morning and evening"
+   ],
+   "how_to_use": "Apply to clean, dry skin on the face and neck. Use in the evening. Follow with sunscreen during the day.",
+   "size": "100 ml",
+   "images": [
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584205/celesta-glow/live-import/4e7c13e62ce815d1.png",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584204/celesta-glow/live-import/e79771ce3094ac47.png",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584202/celesta-glow/live-import/d7ac756b1b8d2d47.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584206/celesta-glow/live-import/f357226754bd94ff.jpg"
+   ],
+   "mrp": 799.0,
+   "prepaid_price": 499.0,
+   "cod_price": 549.0,
+   "cod_advance": 0.0,
+   "discount_percent": 38.0,
+   "badge": "New Launch",
+   "is_active": true,
+   "sort_order": 1,
+   "rating": 4.8,
+   "reviews_count": 2847,
+   "skin_type": "All Skin Types",
+   "created_at": "2026-04-30T13:28:17.816960+00:00",
+   "updated_at": "2026-10-09T22:14:24.753890+00:00",
+   "is_to_be_launched": false,
+   "launch_date": null,
+   "preorder_count": 0,
+   "preorder_enabled": false,
+   "low_stock_threshold": 10,
+   "stock_qty": 35,
+   "concerns": [
+    "barrier-support",
+    "sensitivity",
+    "aging"
+   ],
+   "niche": "anti-aging",
+   "badges": [
+    "New Launch"
+   ],
+   "brand": "Celesta Glow",
+   "needs_review": false,
+   "subcategory": "face-wash",
+   "taxonomy_classified_at": "2026-10-09T22:14:35.114813+00:00",
+   "tags": [
+    "trending",
+    "new_launch"
+   ],
+   "tags_updated_at": "2026-05-31T20:16:54.313229+00:00",
+   "brand_fixed_at": "2026-05-29T12:34:01.405845+00:00",
+   "brand_was": null,
+   "image_alt_text": "Celesta Glow Gentle Cleanser \u2014 dermatologist recommended anti-aging from Celesta Glow Kerala",
+   "is_dermat_tested": true,
+   "test_report_image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584203/celesta-glow/live-import/98dc57dd4992a552.jpg"
+  },
+  {
+   "slug": "sunscreen",
+   "name": "Celesta Glow SPF 50 PA+++ Sunscreen",
+   "short_name": "SPF 50 Sunscreen",
+   "tagline": "Broad Spectrum + Lightweight + Matte Feel",
+   "description": "A lightweight, broad-spectrum formula designed to protect the skin from harmful UVA and UVB rays. Enriched with Niacinamide and antioxidant Vitamin E, it helps support skin clarity while providing a comfortable, non-greasy matte finish.",
+   "category": "sunscreens",
+   "key_ingredients": "Niacinamide + Vitamin E",
+   "ingredients_full": "Aqua, Aloe Barbadensis Leaf Extract, Methylene Bis-Benzotriazolyl Tetramethylbutylphenol, Decyl Glucoside, Propylene Glycol, Xanthan Gum, Propanediol, Glycerin, Titanium Dioxide, Niacinamide, Betaine, Chamomilla Recutita (Chamomile) Flower Water, Benzyl Alcohol, Ethylhexylglycerin, Tocopherol, Carbomer, Hydrolyzed Pea Protein, 4-n-Butylresorcinol, Stevioside, Sodium Gluconate, Cyamopsis Tetragonoloba (Guar) Gum",
+   "benefits": [
+    "Broad Spectrum UVA/UVB Protection",
+    "Prevents Sun-Induced Skin Damage",
+    "Lightweight, Non-Greasy Texture",
+    "Provides a Matte Finish"
+   ],
+   "how_to_use": "Apply generously to face and exposed areas 15 minutes before sun exposure. Reapply every 2-3 hours, or after sweating or washing.",
+   "size": "50g / 1.76 oz",
+   "images": [
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584351/celesta-glow/live-import/ef09d168d290e156.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584242/celesta-glow/live-import/aee18ad731c92205.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584210/celesta-glow/live-import/d43fd484b8902506.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584241/celesta-glow/live-import/afc492aef3a0a01f.jpg"
+   ],
+   "mrp": 799.0,
+   "prepaid_price": 449.0,
+   "cod_price": 599.0,
+   "cod_advance": 29.0,
+   "discount_percent": 44.0,
+   "badge": "Daily Essential",
+   "is_active": true,
+   "sort_order": 2,
+   "rating": 4.6,
+   "reviews_count": 1542,
+   "skin_type": "All Skin Types",
+   "created_at": "2026-04-30T13:28:17.816986+00:00",
+   "updated_at": "2026-10-09T22:14:24.773388+00:00",
+   "is_to_be_launched": false,
+   "launch_date": null,
+   "preorder_count": 0,
+   "preorder_enabled": false,
+   "low_stock_threshold": 10,
+   "stock_qty": 46,
+   "concerns": [
+    "oil-sebum",
+    "sun-protection",
+    "brightening-glow"
+   ],
+   "niche": "anti-aging",
+   "needs_review": false,
+   "subcategory": "cream-sunscreen",
+   "taxonomy_classified_at": "2026-10-09T22:14:35.129225+00:00",
+   "brand": "Celesta Glow",
+   "brand_fixed_at": "2026-05-29T12:45:53.283961+00:00",
+   "brand_was": null,
+   "tags": [
+    "trending"
+   ],
+   "tags_updated_at": "2026-05-31T20:16:54.313229+00:00",
+   "image_alt_text": "Celesta Glow SPF 50 PA+++ Sunscreen \u2014 dermatologist recommended anti-aging from Celesta Glow Kerala",
+   "is_dermat_tested": true,
+   "test_report_image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584209/celesta-glow/live-import/4f79b3bec7799cb3.jpg"
+  },
+  {
+   "slug": "anti-aging-cream",
+   "name": "Celesta Glow Advanced Retinoid Night Cream",
+   "short_name": "Anti-Aging Night Cream",
+   "tagline": "Anti-Aging + Brightening Formula",
+   "description": "An advanced night cream formulated with Retinoid and Hyaluronic Acid. Works overnight to reduce fine lines and wrinkles, improve skin firmness, brighten and even skin tone, and deeply hydrate for a youthful morning glow.",
+   "category": "moisturizers",
+   "key_ingredients": "Retinoid + Hyaluronic Acid",
+   "ingredients_full": "Aqua, Aloe Barbadensis Leaf Extract, Coco-Caprylate/Caprate, Glycerin, Helianthus Annuus (Sunflower) Seed Oil, Sodium Polyacrylate, Xylitol, Caprylic Acid, Glyceryl Stearate, Diethylhexyl Maleate, Cetearyl Alcohol, Propanediol, Sodium Hyaluronate, Phenoxyethanol, Ethylhexylglycerin, Hydrolyzed Pea Protein, Tocopherol, Stevioside, 4-n-Butylresorcinol, Dimethyl Isosorbide, Hydroxypinacolone Retinoate, Sodium Gluconate, Cyamopsis Tetragonoloba (Guar) Gum",
+   "benefits": [
+    "Reduces Fine Lines & Wrinkles",
+    "Improves Skin Firmness",
+    "Brightens & Evens Skin Tone",
+    "Deeply Hydrates Overnight"
+   ],
+   "how_to_use": "Apply to clean, dry skin on the face and neck. Use in the evening. Follow with sunscreen during the day.",
+   "size": "50ml / 1.69 fl oz",
+   "images": [
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584265/celesta-glow/live-import/e3c8947ff2032de8.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584251/celesta-glow/live-import/d0fa1cf0ac42dac1.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584286/celesta-glow/live-import/b031fd68d734d659.png",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584250/celesta-glow/live-import/87c04c5f3aa7abfd.jpg"
+   ],
+   "mrp": 1499.0,
+   "prepaid_price": 999.0,
+   "cod_price": 999.0,
+   "cod_advance": 0.0,
+   "discount_percent": 33.0,
+   "badge": "New Launch",
+   "is_active": true,
+   "sort_order": 3,
+   "rating": 4.7,
+   "reviews_count": 1293,
+   "skin_type": "All Skin Types",
+   "created_at": "2026-04-30T13:28:17.816975+00:00",
+   "updated_at": "2026-10-09T22:14:24.761450+00:00",
+   "is_to_be_launched": false,
+   "launch_date": null,
+   "preorder_count": 0,
+   "preorder_enabled": false,
+   "low_stock_threshold": 10,
+   "stock_qty": 29,
+   "concerns": [
+    "dryness",
+    "aging",
+    "brightening-glow"
+   ],
+   "niche": "anti-aging",
+   "needs_review": false,
+   "subcategory": "night-cream",
+   "taxonomy_classified_at": "2026-10-09T22:14:35.122478+00:00",
+   "brand": "Celesta Glow",
+   "brand_fixed_at": "2026-05-29T12:45:53.270947+00:00",
+   "brand_was": null,
+   "tags": [
+    "trending",
+    "new_launch"
+   ],
+   "tags_updated_at": "2026-05-31T20:16:54.313229+00:00",
+   "image_alt_text": "Celesta Glow Advanced Retinoid Night Cream \u2014 dermatologist recommended anti-aging from Celesta Glow Kerala",
+   "is_dermat_tested": true,
+   "test_report_image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584251/celesta-glow/live-import/6a6512ea684c1068.jpg"
+  },
+  {
+   "slug": "under-eye-cream",
+   "name": "Celesta Glow Caffeine Under Eye Cream",
+   "short_name": "Under Eye Cream",
+   "tagline": "Dark Circle + Puffiness + Anti-Aging Formula",
+   "description": "A lightweight formula designed for the delicate under-eye area. Enriched with Caffeine, Niacinamide, and Hyaluronic Acid, it helps reduce the appearance of puffiness, improve under-eye brightness, and smooth the look of fine lines while providing lasting hydration.",
+   "category": "eye-care",
+   "key_ingredients": "Caffeine + Niacinamide + Hyaluronic Acid",
+   "ingredients_full": "Aqua, Aloe Barbadensis Leaf Extract, Caffeine, Butyrospermum Parkii (Shea) Butter Extract, Sodium Starch Octenylsuccinate, Cera Alba (Beeswax), Hydroxyethyl Behenamidopropyl Dimonium Chloride, Polyquaternium-67, Hydrated Silica, Isopropyl Myristate, PEG-100 Stearate, Glyceryl Stearate, Stearic Acid, Cetyl Alcohol, Glycerin, Propanediol, Butyrospermum Parkii (Shea) Butter, Glyceryl Stearate SE, Olea Europaea (Olive) Fruit Oil, Prunus Amygdalus Dulcis (Sweet Almond) Oil, Glycyrrhiza Glabra (Licorice) Root Extract, Sodium Hyaluronate, Hydrolyzed Pea Protein, Niacinamide, Phenoxyethanol, Ethylhexylglycerin, Ammonium Acryloyldimethyltaurate/VP Copolymer, Stevioside, Allantoin, Sodium Gluconate, Tocopherol",
+   "benefits": [
+    "Reduces Appearance of Puffiness",
+    "Improves Under-Eye Brightness",
+    "Smooths Fine Lines Around Eyes",
+    "Provides Lightweight Hydration",
+    "Suitable for Daily Use"
+   ],
+   "how_to_use": "Apply a small amount to the under-eye area. Gently pat with fingertips until absorbed. Use morning and evening.",
+   "size": "15g / 0.52 oz",
+   "images": [
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584354/celesta-glow/live-import/b0f9b4140fb8f849.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584356/celesta-glow/live-import/435829a778d37805.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584287/celesta-glow/live-import/1682f3916ae388c0.jpg",
+    "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584354/celesta-glow/live-import/deaa783f478ac740.jpg"
+   ],
+   "mrp": 899,
+   "prepaid_price": 549,
+   "cod_price": 649,
+   "cod_advance": 0.0,
+   "discount_percent": 39.0,
+   "badge": "New Launch",
+   "is_active": true,
+   "sort_order": 5,
+   "rating": 4.7,
+   "reviews_count": 3571,
+   "skin_type": "All Skin Types",
+   "created_at": "2026-04-30T13:28:17.816981+00:00",
+   "updated_at": "2026-10-09T22:14:24.767854+00:00",
+   "is_to_be_launched": false,
+   "launch_date": null,
+   "preorder_count": 0,
+   "preorder_enabled": false,
+   "low_stock_threshold": 10,
+   "stock_qty": 65,
+   "concerns": [
+    "oil-sebum",
+    "dryness",
+    "under-eye"
+   ],
+   "niche": "anti-aging",
+   "needs_review": false,
+   "subcategory": "eye-cream",
+   "taxonomy_classified_at": "2026-10-09T22:14:35.105706+00:00",
+   "brand": "Celesta Glow",
+   "brand_fixed_at": "2026-05-29T12:45:53.277447+00:00",
+   "brand_was": null,
+   "tags": [
+    "trending",
+    "new_launch"
+   ],
+   "tags_updated_at": "2026-05-31T20:16:54.313229+00:00",
+   "image_alt_text": "Celesta Glow Caffeine Under Eye Cream \u2014 dermatologist recommended anti-aging from Celesta Glow Kerala",
+   "is_dermat_tested": true,
+   "test_report_image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584289/celesta-glow/live-import/3130dfd84887ba6c.jpg"
+  }
+ ],
+ "combos": [
+  {
+   "combo_id": "complete-anti-aging-kit",
+   "name": "Complete Anti-Aging Kit",
+   "description": "All 5 products for a complete anti-aging routine. Cleanse, treat, hydrate, protect.",
+   "product_slugs": [
+    "cleanser",
+    "anti-aging-serum",
+    "anti-aging-cream",
+    "under-eye-cream",
+    "sunscreen"
+   ],
+   "mrp_total": 5299.0,
+   "combo_prepaid_price": 2999.0,
+   "combo_cod_price": 2999.0,
+   "discount_percent": 51.0,
+   "badge": "Best Value",
+   "is_active": true,
+   "sort_order": 1,
+   "created_at": "2026-04-30T13:28:17.831067+00:00",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584387/celesta-glow/live-import/578f36506aa5c6c4.jpg",
+   "is_to_be_launched": false,
+   "launch_date": null,
+   "preorder_enabled": false,
+   "updated_at": "2026-08-28T10:28:42.867150+00:00",
+   "niche": "anti-aging"
+  }
+ ],
+ "site_settings": {
+  "before_after_images": [],
+  "cod_advance_amount": 29,
+  "created_at": "2026-04-30T13:28:17.841189+00:00",
+  "hero_subtitle": "5 clinically-formulated products designed exclusively to fight aging. Cleanse, treat, hydrate, protect & brighten.",
+  "hero_title": "India's #1 Complete Anti-Aging Solution",
+  "presale_badge": "",
+  "presale_enabled": false,
+  "presale_title": "",
+  "result_images": [],
+  "banner_carousel": [
+   {
+    "id": "banner-1",
+    "image": "https://images.unsplash.com/photo-1581182815808-b6eb627a8798?auto=format&fit=crop&w=1920&q=80",
+    "title": "Clinically Proven Anti-Aging",
+    "subtitle": "Visible results in 4 weeks",
+    "cta_text": "Shop Now",
+    "cta_link": "/shop",
+    "sort_order": 1
+   },
+   {
+    "id": "banner-2",
+    "image": "https://images.pexels.com/photos/3762871/pexels-photo-3762871.jpeg?auto=compress&cs=tinysrgb&w=1920",
+    "title": "Glow That Speaks",
+    "subtitle": "Dermatologist tested \u00b7 Cruelty free",
+    "cta_text": "Explore Range",
+    "cta_link": "/shop",
+    "sort_order": 2
+   },
+   {
+    "id": "banner-3",
+    "image": "https://images.pexels.com/photos/5468629/pexels-photo-5468629.jpeg?auto=compress&cs=tinysrgb&w=1920",
+    "title": "Free Skin Analysis",
+    "subtitle": "Personalized routine in 60 seconds",
+    "cta_text": "Get Started",
+    "cta_link": "/consultation",
+    "sort_order": 3
+   }
+  ],
+  "carousel_autoplay_ms": 2000,
+  "homepage_feature_image": "https://images.pexels.com/photos/3762871/pexels-photo-3762871.jpeg?auto=compress&cs=tinysrgb&w=1600",
+  "homepage_feature_subtitle": "5 clinically-formulated products. One radiant transformation.",
+  "homepage_feature_title": "Complete Skin Renewal System",
+  "niche_settings": {
+   "anti-aging": {
+    "brand_name": "Celesta Glow",
+    "hero": {
+     "image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584389/celesta-glow/live-import/8bebb4046d79178d.png",
+     "image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584465/celesta-glow/live-import/94647fb8ddb57f3d.jpg",
+     "eyebrow": "Anti-Aging",
+     "title_line1": "Visible firming",
+     "title_line2": "& youthful glow.",
+     "subtitle": "Clinical-grade Retinol, Vitamin C and Peptides \u2014 formulated for Indian skin to reduce fine lines and brighten in 4 weeks.",
+     "cta1_label": "Shop the routine",
+     "cta1_link": "/categories",
+     "cta2_label": "Free Skin Analysis",
+     "cta2_link": "/skin-analysis",
+     "accent": "#0f766e",
+     "accent_dark": "#115e59",
+     "accent_bg": "#d1fae5"
+    },
+    "bestsellers": {
+     "enabled": true,
+     "eyebrow": "Trending now",
+     "title_prefix": "Anti-Aging",
+     "title_highlight": "Bestsellers",
+     "limit": 10,
+     "sort_by": "reviews_count"
+    },
+    "cta_section": {
+     "enabled": true,
+     "eyebrow": "Build your routine",
+     "title": "Not sure where to start?",
+     "subtitle": "Tell us your skin type \u2014 we'll build a personalized AM & PM ritual in 2 seconds.",
+     "button_label": "Start Routine Builder",
+     "button_link": "/routine",
+     "bg_from": "#047857",
+     "bg_via": "#065f46",
+     "bg_to": "#115e59"
+    },
+    "show_complete_kit": true,
+    "show_reviews": true,
+    "show_dermatologist": true,
+    "show_faq": true,
+    "show_concern_strip": false,
+    "card_image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584395/celesta-glow/live-import/8c4c4fe7b682c08a.jpg",
+    "card_image_tablet": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584465/celesta-glow/live-import/8cd1fe3b02ec6e66.jpg",
+    "card_image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584456/celesta-glow/live-import/6bf55b3dde7c1d23.jpg",
+    "banner_carousel": [
+     {
+      "id": "b1783857765599",
+      "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584572/celesta-glow/live-import/23b029915432ce18.jpg",
+      "cta_link": "/shop",
+      "sort_order": 1
+     }
+    ]
+   },
+   "skincare": {
+    "brand_name": "Celesta Glow",
+    "hero": {
+     "image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584466/celesta-glow/live-import/06805b3adfe3a2ca.png",
+     "image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584458/celesta-glow/live-import/78d5d18bc639b3f4.jpg",
+     "eyebrow": "Skincare",
+     "title_line1": "Skincare for every",
+     "title_line2": "skin type & concern.",
+     "subtitle": "From acne to dullness, dryness to dark spots \u2014 pick your concern and we'll show you the routine.",
+     "cta1_label": "Pick your concern",
+     "cta1_link": "/categories",
+     "cta2_label": "Free Skin Analysis",
+     "cta2_link": "/skin-analysis",
+     "accent": "#0e7490",
+     "accent_dark": "#155e75",
+     "accent_bg": "#cffafe"
+    },
+    "bestsellers": {
+     "enabled": true,
+     "eyebrow": "Trending now",
+     "title_prefix": "Skincare",
+     "title_highlight": "Bestsellers",
+     "limit": 10,
+     "sort_by": "reviews_count"
+    },
+    "cta_section": {
+     "enabled": true,
+     "eyebrow": "Build your routine",
+     "title": "Not sure where to start?",
+     "subtitle": "Take the 2-minute Skin Analysis and we'll build a personalized routine.",
+     "button_label": "Start Routine Builder",
+     "button_link": "/routine",
+     "bg_from": "#0e7490",
+     "bg_via": "#155e75",
+     "bg_to": "#115e59"
+    },
+    "show_concern_strip": true,
+    "concern_strip_title": "Shop by Concern",
+    "concern_strip_subtitle": "Pick your skin problem",
+    "show_reviews": false,
+    "show_dermatologist": false,
+    "show_faq": false,
+    "show_complete_kit": false,
+    "card_image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584457/celesta-glow/live-import/b651d3f5f9c69b4a.jpg",
+    "card_image_tablet": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584390/celesta-glow/live-import/ff2379c14c26fded.jpg",
+    "card_image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584393/celesta-glow/live-import/080d0497b689493c.jpg",
+    "sale_badge": {
+     "offers": []
+    }
+   },
+   "cosmetics": {
+    "brand_name": "Celesta Beauty",
+    "hero": {
+     "image_desktop": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1664&q=80",
+     "image_mobile": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=80",
+     "eyebrow": "Cosmetics",
+     "title_line1": "Beauty meets",
+     "title_line2": "skincare actives.",
+     "subtitle": "Buildable colour, weightless wear, skin-loving actives. Pick your category and shop the look.",
+     "cta1_label": "Shop categories",
+     "cta1_link": "/categories",
+     "cta2_label": "Free Skin Analysis",
+     "cta2_link": "/skin-analysis",
+     "accent": "#be185d",
+     "accent_dark": "#831843",
+     "accent_bg": "#fce7f3"
+    },
+    "bestsellers": {
+     "enabled": true,
+     "eyebrow": "Most-loved",
+     "title_prefix": "Makeup",
+     "title_highlight": "Bestsellers",
+     "limit": 10,
+     "sort_by": "reviews_count"
+    },
+    "cta_section": {
+     "enabled": false,
+     "eyebrow": "Complete the look",
+     "title": "Glow + Color in one routine.",
+     "subtitle": "Pair our skincare actives with our makeup for a healthy-skin finish.",
+     "button_label": "Start Routine Builder",
+     "button_link": "/routine",
+     "bg_from": "#be185d",
+     "bg_via": "#9d174d",
+     "bg_to": "#831843"
+    },
+    "show_category_strip": true,
+    "category_strip_title": "Shop by Category",
+    "category_strip_subtitle": "Lip \u00b7 Eye \u00b7 Brow \u00b7 Face",
+    "show_reviews": false,
+    "show_dermatologist": false,
+    "show_faq": false,
+    "show_complete_kit": false,
+    "card_image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584456/celesta-glow/live-import/75b960a615e34cbb.jpg",
+    "card_image_tablet": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584389/celesta-glow/live-import/8a738927c8f44f5a.jpg",
+    "card_image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584394/celesta-glow/live-import/37140b710ba234b4.jpg"
+   }
+  },
+  "updated_at": "2026-09-24T12:26:50.116203+00:00",
+  "volume_discounts": [
+   {
+    "min_items": 2,
+    "discount_percent": 3
+   },
+   {
+    "min_items": 3,
+    "discount_percent": 5
+   },
+   {
+    "min_items": 4,
+    "discount_percent": 8
+   }
+  ],
+  "cosmetics_featured_nav": [
+   {
+    "slug": "bestseller",
+    "label": "Bestseller",
+    "kind": "tag",
+    "value": "bestseller"
+   },
+   {
+    "slug": "new-launch",
+    "label": "New Launch",
+    "kind": "tag",
+    "value": "new_launch"
+   },
+   {
+    "slug": "bridal-store",
+    "label": "Bridal Store",
+    "kind": "collection",
+    "value": "bridal-store"
+   },
+   {
+    "slug": "base-makeup-routine",
+    "label": "Base Makeup Routine",
+    "kind": "collection",
+    "value": "base-makeup-routine"
+   },
+   {
+    "slug": "foundation",
+    "label": "Foundation",
+    "kind": "subcategory",
+    "value": "foundation"
+   },
+   {
+    "slug": "concealer",
+    "label": "Concealer",
+    "kind": "subcategory",
+    "value": "concealer"
+   },
+   {
+    "slug": "eye-shadow",
+    "label": "Eye Shadow",
+    "kind": "subcategory",
+    "value": "eye-shadow"
+   },
+   {
+    "slug": "eyeliner-kajals",
+    "label": "Eyeliner & Kajals",
+    "kind": "subcategory-group",
+    "value": [
+     "eyeliner",
+     "kajal"
+    ]
+   },
+   {
+    "slug": "mascara",
+    "label": "Mascara",
+    "kind": "subcategory",
+    "value": "mascara"
+   },
+   {
+    "slug": "lipstick",
+    "label": "Lipstick",
+    "kind": "subcategory",
+    "value": "lipstick"
+   },
+   {
+    "slug": "nail-polish",
+    "label": "Nail Polish",
+    "kind": "subcategory",
+    "value": "nail-polish"
+   },
+   {
+    "slug": "tools-brushes",
+    "label": "Tools & Brushes",
+    "kind": "category",
+    "value": "tools-brushes"
+   }
+  ],
+  "cosmetics_promo_sections": [
+   {
+    "slug": "best-of-makeup",
+    "title": "Best Of Makeup",
+    "subtitle": "Top-rated picks loved by thousands",
+    "kind": "tag",
+    "value": "bestseller",
+    "limit": 12
+   },
+   {
+    "slug": "brands-you-will-love",
+    "title": "Brands You Will Love",
+    "subtitle": "Featured cosmetics brands",
+    "kind": "brands",
+    "value": null,
+    "limit": 12
+   },
+   {
+    "slug": "find-your-perfect-match",
+    "title": "Find Your Perfect Match",
+    "subtitle": "Shade-finder powered by your skin tone",
+    "kind": "shade-finder",
+    "value": null,
+    "limit": 0
+   }
+  ],
+  "taxonomy_canonical_applied": true,
+  "taxonomy_canonical_applied_at": "2026-09-24T19:04:41.698770+00:00",
+  "taxonomy_canonical_version": "2026-02-granular-subs-v5",
+  "taxonomy_v2_applied": true,
+  "categories_hub": {
+   "hero": {
+    "eyebrow": "EXPLORE THE COLLECTION",
+    "title_line1": "Shop by",
+    "title_line2": "Category.",
+    "subtitle": "From clinical anti-aging to luxe cosmetics \u2014 find what you're looking for in seconds.",
+    "image_desktop": "",
+    "image_mobile": "",
+    "accent": "#0f766e",
+    "search_placeholder": "Search categories, concerns, products\u2026"
+   },
+   "niche_cards": {
+    "anti_aging": {
+     "enabled": true,
+     "eyebrow": "Youthful Radiance",
+     "title": "Anti-Aging",
+     "subtitle": "Clinical retinol, peptides & vitamin-C built for Indian skin.",
+     "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584401/celesta-glow/live-import/738a6a64bdadcabd.jpg",
+     "cta_label": "Discover",
+     "cta_link": "/",
+     "accent": "#0f766e",
+     "bg_from": "#ecfdf5",
+     "bg_to": "#a7f3d0"
+    },
+    "skincare": {
+     "enabled": true,
+     "eyebrow": "Healthy Glowing Skin",
+     "title": "Skincare",
+     "subtitle": "Acne, pigmentation, dryness, dullness \u2014 pick your concern, get the routine.",
+     "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584455/celesta-glow/live-import/99dddfc7ed6a0582.jpg",
+     "cta_label": "Pick your concern",
+     "cta_link": "/skincare",
+     "accent": "#0e7490",
+     "bg_from": "#facab6",
+     "bg_to": "#a5f3fc"
+    },
+    "cosmetics": {
+     "enabled": true,
+     "eyebrow": "Enhance Your Beauty",
+     "title": "Cosmetics",
+     "subtitle": "Long-wear lip, satin foundation, hydrating blush \u2014 colour that loves your skin.",
+     "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584388/celesta-glow/live-import/6beccc75abe7a537.jpg",
+     "cta_label": "Shop the shades",
+     "cta_link": "/cosmetics",
+     "accent": "#be185d",
+     "bg_from": "#fdf2f8",
+     "bg_to": "#fbcfe8"
+    }
+   },
+   "ribbon": {
+    "enabled": true,
+    "text": "New customer? Flat \u20b950 OFF with code",
+    "code": "WELCOME50",
+    "cta_label": "Shop now",
+    "cta_link": "/shop",
+    "bg_from": "#0f766e",
+    "bg_to": "#115e59"
+   },
+   "ingredient_strip": {
+    "enabled": true,
+    "title": "Powered by clinical ingredients",
+    "subtitle": "Hand-picked for Indian skin tones and the Indian climate.",
+    "items": [
+     {
+      "name": "Retinol",
+      "hex": "#fef3c7",
+      "img": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584498/celesta-glow/live-import/2308c8b93ddd5ff4.jpg"
+     },
+     {
+      "name": "Vitamin C",
+      "hex": "#fef9c3",
+      "img": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584392/celesta-glow/live-import/1e07a8300e41b3b8.jpg"
+     },
+     {
+      "name": "Niacinamide",
+      "hex": "#fce7f3",
+      "img": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584454/celesta-glow/live-import/7aadb463de3b4452.jpg"
+     },
+     {
+      "name": "Hyaluronic",
+      "hex": "#cffafe",
+      "img": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584457/celesta-glow/live-import/a53b98fd691deb6c.jpg"
+     }
+    ]
+   },
+   "editors_picks": {
+    "enabled": true,
+    "eyebrow": "EDITOR'S PICKS",
+    "title": "This month's most-loved",
+    "slugs": []
+   }
+  },
+  "splash_image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584455/celesta-glow/live-import/a8437d664e353f70.jpg",
+  "other_brands_in_stock": false
+ },
+ "top_banner": {
+  "image_desktop": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584573/celesta-glow/live-import/066eef8f2bb16b5e.jpg",
+  "image_mobile": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584574/celesta-glow/live-import/351ff2391dbb4cd7.jpg",
+  "link_url": "/shop?niche=anti-aging",
+  "is_active": true
+ },
+ "niche_mode": {
+  "active_niches": [
+   "anti-aging"
+  ]
+ },
+ "before_after": [
+  {
+   "product_slug": "celesta-glow-advanced-face-serum",
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584661/celesta-glow/live-import/7381223e3adf31cb.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": false,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:13:33.589251+00:00",
+   "ba_id": "ba_dc2a00f4"
+  },
+  {
+   "product_slug": "under-eye-cream",
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584616/celesta-glow/live-import/1ed71a3d06e720ac.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": false,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:14:09.326175+00:00",
+   "ba_id": "ba_d582cdbf"
+  },
+  {
+   "product_slug": "anti-aging-serum",
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584661/celesta-glow/live-import/408a56853458a1bd.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": false,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:16:09.055321+00:00",
+   "ba_id": "ba_9a1b9f84"
+  },
+  {
+   "product_slug": "sunscreen",
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584588/celesta-glow/live-import/b2feb0a0e951b0d2.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": false,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:17:38.390605+00:00",
+   "ba_id": "ba_cbaa826f"
+  },
+  {
+   "product_slug": "anti-aging-cream",
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584575/celesta-glow/live-import/806609820d7bc5ed.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": false,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:18:48.323276+00:00",
+   "ba_id": "ba_59c6a9c3"
+  },
+  {
+   "product_slug": null,
+   "customer_name": "",
+   "before_image": "",
+   "after_image": "",
+   "image": "https://res.cloudinary.com/dcvuqcqjn/image/upload/f_auto,q_100/v1791584629/celesta-glow/live-import/67f70a520265defc.jpg",
+   "duration": "",
+   "description": "",
+   "is_global": true,
+   "sort_order": 0,
+   "created_at": "2026-08-30T11:22:33.546371+00:00",
+   "ba_id": "ba_0ce1ba8b"
+  }
+ ]
+}
